@@ -128,7 +128,6 @@
             transform: translateY(-4px);
         }
 
-        /* Mobile fixes */
         @media (max-width: 640px) {
             .text-6xl {
                 font-size: 3.5rem;
@@ -161,43 +160,43 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z29hZXlxa3BnZHdodW96ZGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyOTI2NTcsImV4cCI6MjA4MDg2ODY1N30.VtpQYkKJwIxZmtFTnfU9QxJMrnsNLEy5LjOUaZtQktA';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Data ---
+        // --- Constants ---
         const CARDS_NORMAL = [
             { text: "🥃 Beba 1 shot", type: "drink", bonus: 1 },
             { text: "🥃🥃 Beba 2 shots", type: "drink", bonus: 2 },
             { text: "🍻 Todos bebem!", type: "everyone", bonus: 1 },
             { text: "😎 Todos bebem menos você", type: "safe", bonus: 0 },
             { text: "👉 Escolha alguém para beber", type: "choose", bonus: 0 },
-            { text: "🎤 Conte uma piada ou beba 2 shots", type: "challenge", bonus: 2 },
+            { text: "🎤 Piada ou 2 shots", type: "challenge", bonus: 2 },
             { text: "🤔 Verdade ou shot", type: "challenge", bonus: 1 },
             { text: "📜 Crie uma regra!", type: "rule", bonus: 0 },
             { text: "🖤 Quem usa preto, bebe!", type: "trap", bonus: 1 },
-            { text: "📱 Quem mexer no celular, bebe!", type: "trap", bonus: 1 },
+            { text: "📱 Celular = 1 shot", type: "trap", bonus: 1 },
             { text: "🫣 Segredo ou 3 shots", type: "challenge", bonus: 3 }
         ];
 
         const CARDS_18 = [
-            { text: "🔞 Beije alguém ou beba 3 shots", type: "challenge", bonus: 3 },
-            { text: "🔥 Mostre sua última busca ou beba 2", type: "challenge", bonus: 2 },
-            { text: "😏 Faça uma massagem ou beba 2", type: "challenge", bonus: 2 },
+            { text: "🔞 Beije alguém ou 3 shots", type: "challenge", bonus: 3 },
+            { text: "🔥 Mostre o histórico ou 2 shots", type: "challenge", bonus: 2 },
+            { text: "😏 Massagem ou beba 2 shots", type: "challenge", bonus: 2 },
             { text: "🥃 Beba se já ficou com alguém aqui", type: "drink", bonus: 1 },
             { text: "🫣 Verdade picante ou 3 shots", type: "challenge", bonus: 3 },
-            { text: "🧊 Gelo no corpo ou beba 2 shots", type: "challenge", bonus: 2 },
-            { text: "🍻 Todos que já fizeram 'menage' bebem", type: "everyone", bonus: 1 }
+            { text: "🧊 Gelo no corpo ou 2 shots", type: "challenge", bonus: 2 },
+            { text: "🍻 Menage? Todos bebem!", type: "everyone", bonus: 1 }
         ];
 
-        const ROULETTE_CHALLENGES = [
+        const ROULETTE_BASE = [
             { text: "😌 Não bebe", bonus: 0 },
             { text: "🥃 Beba 1 shot", bonus: 1 },
             { text: "🥃🥃 Beba 2 shots", bonus: 2 },
             { text: "🍻 Todos bebem", bonus: 1 },
             { text: "😎 Todos bebem menos você", bonus: 0 },
-            { text: "👉 Escolha alguém para beber", bonus: 0 },
-            { text: "👥 Escolha dois para beber", bonus: 0 },
-            { text: "➡️ O próximo jogador bebe", bonus: 0 },
+            { text: "👉 Escolha 1", bonus: 0 },
+            { text: "👥 Escolha 2", bonus: 0 },
+            { text: "➡️ Próximo bebe", bonus: 0 },
             { text: "🎤 Piada ou 2 shots", bonus: 2 },
             { text: "🤔 Verdade ou shot", bonus: 1 },
-            { text: "🗳️ Votação ao Vivo", bonus: 0, special: "democracy" }
+            { text: "🗳️ Votação Democrática", bonus: 0, special: "democracy" }
         ];
 
         const THEMES = { drink: "from-rose-500 to-pink-600", everyone: "from-indigo-500 to-purple-600", safe: "from-emerald-400 to-teal-500", choose: "from-amber-400 to-orange-500", challenge: "from-orange-400 to-red-500", rule: "from-cyan-400 to-blue-500", trap: "from-red-600 to-pink-700" };
@@ -207,47 +206,25 @@
             Plus: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
             Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
             Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>,
-            Share: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>,
-            User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Back: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7-7l-7 7 7 7" /></svg>
         };
 
-        // --- Layout Components ---
-        const GlassCard = ({ children, className = "" }) => (
-            <div className={`glass border-white/5 p-6 sm:p-8 ${className}`}>
-                {children}
-            </div>
-        );
-
+        // --- Shared Components ---
+        const GlassCard = ({ children, className = "" }) => <div className={`glass border-white/5 p-6 sm:p-8 ${className}`}>{children}</div>;
         const ShotTrack = ({ players }) => (
             <div className="flex gap-2 overflow-x-auto custom-scroll pb-2 mb-6">
                 {players.map(p => (
                     <div key={p.name} className="flex-shrink-0 glass px-4 py-2 flex items-center gap-2 border-white/10">
-                        <span className="text-xs font-bold uppercase tracking-widest text-white/50">{p.name}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{p.name}</span>
                         <span className="text-primary font-black">{p.shots}</span>
                     </div>
                 ))}
             </div>
         );
 
-        const DemoVote = ({ players, onEnd }) => (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-                <GlassCard className="w-full max-w-sm text-center">
-                    <h3 className="text-2xl font-black italic uppercase text-primary mb-4">DEMOCRACIA ETÍLICA</h3>
-                    <p className="text-gray-400 mb-8 font-medium">O grupo vota: quem deve beber essa rodada?</p>
-                    <div className="grid grid-cols-2 gap-3 mb-8">
-                        {players.map(p => (
-                            <button key={p.name} onClick={() => onEnd(p.name)} className="glass py-3 font-bold uppercase text-xs hover:bg-primary transition-all tracking-widest">{p.name}</button>
-                        ))}
-                    </div>
-                    <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">O mais citado toma o shot!</p>
-                </GlassCard>
-            </div>
-        );
-
         const RouletteWheel = ({ items, spin, onEnd }) => {
             const [offset, setOffset] = useState(0);
             const itemH = 60;
-
             useEffect(() => {
                 if (spin) {
                     const extraSpins = 8 + Math.floor(Math.random() * 4);
@@ -258,22 +235,13 @@
                     return () => clearTimeout(timer);
                 }
             }, [spin]);
-
-            const displayItems = useMemo(() => {
-                let res = []; for (let i = 0; i < 40; i++) res = [...res, ...items]; return res;
-            }, [items]);
-
+            const displayItems = useMemo(() => { let res = []; for (let i = 0; i < 40; i++) res = [...res, ...items]; return res; }, [items]);
             return (
                 <div className="roulette-container w-full">
                     <div className="roulette-marker"></div>
-                    <motion.div
-                        initial={false}
-                        animate={{ y: -offset + 60 }}
-                        transition={{ duration: spin ? 4 : 0, ease: [0.15, 0.85, 0.35, 1] }}
-                        className="flex flex-col"
-                    >
+                    <motion.div initial={false} animate={{ y: -offset + 60 }} transition={{ duration: spin ? 4 : 0, ease: [0.15, 0.85, 0.35, 1] }} className="flex flex-col">
                         {displayItems.map((it, i) => (
-                            <div key={i} className="h-[60px] flex items-center justify-center font-bold text-lg tracking-wider text-white/80 uppercase italic whitespace-nowrap px-4">
+                            <div key={i} className="h-[60px] flex items-center justify-center font-bold text-lg tracking-wider text-white/80 uppercase italic whitespace-nowrap px-4 text-center">
                                 {typeof it === 'string' ? it : it.text}
                             </div>
                         ))}
@@ -284,125 +252,132 @@
 
         // --- Views ---
         const LandingView = ({ onStart }) => (
-            <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-8xl sm:text-[100px] mb-4">🥃</motion.div>
+            <div className="flex flex-col items-center justify-center min-h-screen text-center px-8">
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-8xl mb-4">🥃</motion.div>
                 <h1 className="text-5xl sm:text-7xl font-extrabold gradient-text italic leading-none text-glow uppercase mb-4">Drink <br /><span className="text-primary">&</span> Play</h1>
-                <p className="text-gray-400 mb-10 max-w-xs font-light text-sm">Elevando suas sociais com responsabilidade e diversão premium.</p>
-                <button onClick={onStart} className="btn-premium px-12 py-5 rounded-full text-xl font-bold uppercase tracking-[0.2em] text-white shadow-2xl mb-12">Entrar na Roda</button>
-
-                <div className="max-w-md w-full glass p-6 sm:p-8 text-left border-white/5 mb-10">
-                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-6 flex items-center gap-2 italic">
-                        <Icons.Sparkles /> Guia da Plataforma
-                    </h3>
+                <p className="text-gray-400 mb-10 max-w-xs font-light text-sm">A melhor experiência social para suas noites.</p>
+                <button onClick={onStart} className="btn-premium px-12 py-5 rounded-full text-xl font-bold uppercase tracking-widest text-white shadow-2xl mb-12">Iniciar Jogo</button>
+                <GlassCard className="max-w-md w-full text-left">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-6 flex items-center gap-2 italic"><Icons.Sparkles /> Guia de Uso</h3>
                     <div className="space-y-4">
                         {[
-                            { t: "Montagem", d: "Crie seu esquadrão com os nomes da galera." },
-                            { t: "Desafios", d: "Cartas imersivas ou Roleta Extreme de democracia." },
-                            { t: "Custom", d: "No menu, crie seus próprios desafios personalizados." },
-                            { t: "Social", d: "Gere seu Story-Card no final para postar no Insta." }
+                            { t: "Configuração", d: "Adicione os nomes dos jogadores na próxima tela." },
+                            { t: "Modos", d: "Escolha entre Cartas, Roleta ou Modo 18+." },
+                            { t: "Votação", d: "No modo roleta, o grupo vota na Democracia Etílica." },
+                            { t: "Stats", d: "Cada gole é contado para o placar final." }
                         ].map((item, i) => (
                             <div key={i} className="flex gap-4 items-start">
                                 <div className="mt-1 w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-primary"><Icons.Check /></div>
-                                <div>
-                                    <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">{item.t}</p>
-                                    <p className="text-[11px] text-gray-500 leading-tight">{item.d}</p>
-                                </div>
+                                <div><p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">{item.t}</p><p className="text-[11px] text-gray-500 leading-tight">{item.d}</p></div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </GlassCard>
             </div>
         );
 
-        const MenuView = ({ onSelectMode }) => (
-            <div className="max-w-md mx-auto pt-16 px-6 sm:px-8 flex flex-col gap-6 pb-20">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <h2 className="text-4xl font-black italic uppercase mb-1">MODALIDADES</h2>
-                    <p className="text-gray-600 mb-8 uppercase tracking-[0.2em] text-[10px] font-bold">Escolha seu destino alcóolico</p>
-                </motion.div>
-
-                <button onClick={() => onSelectMode('cards')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-rose-500/10 hover:border-rose-500/30">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🃏</div>
-                    <div className="z-10">
-                        <h3 className="text-xl sm:text-2xl font-black text-rose-500 italic uppercase">Cartas</h3>
-                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Deck clássico de desafios</p>
-                    </div>
+        const MenuView = ({ onSelectMode, onCustom }) => (
+            <div className="max-w-md mx-auto pt-16 px-6 sm:px-8 flex flex-col gap-5 pb-20">
+                <h2 className="text-4xl font-black italic uppercase mb-1">MODALIDADES</h2>
+                <p className="text-gray-600 mb-8 uppercase tracking-[0.2em] text-[10px] font-bold italic">Selecione o seu desafio</p>
+                <button onClick={() => onSelectMode('cards')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden border-rose-500/10 hover:border-rose-500/30">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-4xl">🃏</div>
+                    <div><h3 className="text-2xl font-black text-rose-500 italic uppercase">Cartas</h3><p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-none">Desafios clássicos</p></div>
                 </button>
-
-                <button onClick={() => onSelectMode('roulette')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-purple-500/10 hover:border-purple-500/30">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🎰</div>
-                    <div className="z-10">
-                        <h3 className="text-xl sm:text-2xl font-black text-purple-500 italic uppercase">Roleta</h3>
-                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Quem o destino escolherá?</p>
-                    </div>
+                <button onClick={() => onSelectMode('roulette')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden border-purple-500/10 hover:border-purple-500/30">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-4xl">🎰</div>
+                    <div><h3 className="text-2xl font-black text-purple-500 italic uppercase">Roleta</h3><p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-none">Gire o seu destino</p></div>
                 </button>
-
-                <button onClick={() => onSelectMode('18')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-amber-500/10 hover:border-amber-500/30">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🔞</div>
-                    <div className="z-10">
-                        <h3 className="text-xl sm:text-2xl font-black text-amber-500 italic uppercase">Modo 18</h3>
-                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Apenas para os corajosos +18</p>
-                    </div>
+                <button onClick={() => onSelectMode('18')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden border-amber-500/10 hover:border-amber-500/30">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-4xl">🔞</div>
+                    <div><h3 className="text-2xl font-black text-amber-500 italic uppercase">Modo 18</h3><p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-none">Apenas para corajosos</p></div>
                 </button>
-
-                <div className="mt-8 pt-8 border-t border-white/5 text-center">
-                    <p className="text-[10px] text-gray-700 uppercase tracking-[0.3em] mb-4">Em breve: Modo Customizado</p>
-                    <button onClick={() => setView('custom')} className="text-xs font-black text-primary/40 uppercase tracking-widest hover:text-primary transition-all">Criar seu próprio deck</button>
+                <div className="mt-10 pt-8 border-t border-white/5 text-center">
+                    <button onClick={onCustom} className="glass px-10 py-5 w-full flex items-center justify-center gap-3 hover:border-primary/50 transition-all group">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-primary transition-all">Criar Modalidade Custom</span>
+                        <Icons.Plus />
+                    </button>
                 </div>
             </div>
         );
 
         const SetupView = ({ players, onAdd, onRemove, onStart, name, setName }) => (
-            <div className="max-w-md mx-auto pt-16 px-6 sm:px-8 flex flex-col min-h-screen">
+            <div className="max-w-md mx-auto pt-16 px-6 flex flex-col min-h-screen">
                 <h2 className="text-4xl font-black italic uppercase mb-2">Esquadrão</h2>
-                <p className="text-gray-500 uppercase tracking-widest text-[10px] font-bold mb-10">Quem vai pro abate?</p>
+                <p className="text-gray-600 uppercase tracking-widest text-[10px] font-bold mb-10">Quem encara o desafio?</p>
                 <GlassCard className="mb-10">
                     <div className="flex gap-2 mb-6">
-                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-primary transition-all font-bold tracking-widest flex-shrink-1 min-w-0" />
-                        <button onClick={onAdd} className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center shadow-lg"><Icons.Plus /></button>
+                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-primary transition-all font-bold tracking-widest min-w-0" />
+                        <button onClick={onAdd} className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"><Icons.Plus /></button>
                     </div>
-                    <div className="space-y-3 max-h-[350px] overflow-y-auto custom-scroll pr-2">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2">
                         {players.map(p => (
                             <div key={p.name} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
-                                <span className="font-black tracking-widest uppercase text-xs">{p.name}</span>
+                                <span className="font-black tracking-widest uppercase text-[11px]">{p.name}</span>
                                 <button onClick={() => onRemove(p.name)} className="text-gray-600 hover:text-red-500"><Icons.Trash /></button>
                             </div>
                         ))}
                     </div>
                 </GlassCard>
-                <div className="mt-auto pb-10">
-                    <button onClick={onStart} disabled={players.length < 2} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-20">Confirmar</button>
-                </div>
+                <button onClick={onStart} disabled={players.length < 2} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest mb-10 disabled:opacity-20 mt-auto">Confirmar</button>
             </div>
         );
 
-        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel }) => (
-            <div className="max-w-md mx-auto pt-8 px-6 sm:px-8 flex flex-col min-h-screen">
-                <div className="flex justify-between items-center mb-8">
-                    <span className="text-xs font-black text-primary uppercase tracking-[0.3em] italic">{modeLabel}</span>
-                    <button onClick={onExit} className="text-[10px] font-black uppercase tracking-widest text-white/30">Sair</button>
+        const CustomCreator = ({ deck, onSave, onBack }) => {
+            const [txt, setTxt] = useState('');
+            const [items, setItems] = useState(deck || []);
+            const add = () => { if (txt.trim()) { setItems([...items, { text: txt.trim(), type: 'challenge', bonus: 1 }]); setTxt(''); } };
+            return (
+                <div className="max-w-md mx-auto pt-10 px-6 flex flex-col min-h-screen pb-10">
+                    <div className="flex items-center gap-4 mb-8">
+                        <button onClick={onBack} className="w-10 h-10 glass flex items-center justify-center rounded-xl"><Icons.Back /></button>
+                        <h2 className="text-2xl font-black uppercase italic">Criar Deck</h2>
+                    </div>
+                    <GlassCard className="mb-6">
+                        <div className="flex gap-2 mb-6">
+                            <input value={txt} onChange={e => setTxt(e.target.value)} placeholder="NOVO DESAFIO..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary" />
+                            <button onClick={add} className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0"><Icons.Plus /></button>
+                        </div>
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scroll pr-2">
+                            {items.map((it, i) => (
+                                <div key={i} className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5">
+                                    <span className="text-xs font-bold leading-tight">{it.text}</span>
+                                    <button onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-gray-500"><Icons.Trash /></button>
+                                </div>
+                            ))}
+                            {items.length === 0 && <p className="text-center text-gray-600 text-xs py-10 italic">Adicione desafios ao seu deck personalizado</p>}
+                        </div>
+                    </GlassCard>
+                    <button onClick={() => onSave(items)} disabled={items.length === 0} className="btn-premium py-5 rounded-2xl text-xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-20">Salvar Deck</button>
+                </div>
+            );
+        };
+
+        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel, cardsCount }) => (
+            <div className="max-w-md mx-auto pt-6 px-6 flex flex-col min-h-screen pb-10">
+                <div className="flex justify-between items-center mb-6">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] italic leading-none">{modeLabel}</span>
+                    <button onClick={onExit} className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white">Voltar</button>
                 </div>
                 <ShotTrack players={players} />
                 <div className="text-center mb-8">
-                    <p className="text-[10px] uppercase font-black tracking-[0.3em] text-gray-600 mb-2 italic">Vez de</p>
-                    <h2 className="text-4xl font-black italic uppercase text-glow">{players[active]?.name}</h2>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Rodada {cardsCount}</p>
+                    <h2 className="text-3xl font-black italic uppercase text-glow">{players[active]?.name}</h2>
                 </div>
-                <div className="relative h-[360px] cursor-pointer" onClick={onDraw}>
-                    <div className={`w-full h-full glass rounded-[40px] border-2 border-dashed border-white/10 flex flex-col items-center justify-center transition-all duration-500 ${card ? 'opacity-0 scale-90 translate-y-10' : 'opacity-100 scale-100'}`}>
-                        <div className="text-8xl mb-6">🃏</div><p className="font-black text-gray-500 italic uppercase tracking-widest text-xs">Puxar Carta</p>
+                <div className="relative h-[360px] cursor-pointer mb-10" onClick={onDraw}>
+                    <div className={`w-full h-full glass rounded-[40px] border-2 border-dashed border-white/10 flex flex-col items-center justify-center transition-all ${card ? 'opacity-0 scale-90 translate-y-10' : 'opacity-100 scale-100'}`}>
+                        <div className="text-7xl mb-4 animate-bounce">🃏</div><p className="font-black text-gray-500 uppercase tracking-widest text-[10px]">Puxar Carta</p>
                     </div>
                     <AnimatePresence>
                         {card && (
-                            <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} className={`absolute inset-0 rounded-[40px] p-8 sm:p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl border border-white/10 ${THEMES[card.type] || 'from-gray-800 to-black'}`}>
+                            <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} className={`absolute inset-0 rounded-[40px] p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl border border-white/10 ${THEMES[card.type] || 'from-gray-800 to-black'}`}>
                                 <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight uppercase italic drop-shadow-lg">{card.text}</h3>
                                 <div className="mt-10 p-4 bg-white/20 rounded-2xl flex gap-3">{Array(card.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-2xl">{s}</span>)}</div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
-                <div className="mt-auto pb-10">
-                    <button onClick={onDraw} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl">{card ? 'PRÓXIMA' : 'INICIAR'}</button>
-                </div>
+                <button onClick={onDraw} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl mt-auto">PRÓXIMA</button>
             </div>
         );
 
@@ -410,36 +385,23 @@
             const [spinning, setSpinning] = useState(false);
             const [pResult, setPResult] = useState(null);
             const [cResult, setCResult] = useState(null);
-
-            const handleSpin = () => { if (spinning) return; setSpinning(true); setPResult(null); setCResult(null); };
-
-            useEffect(() => {
-                if (pResult && cResult && spinning) {
-                    setSpinning(false);
-                    if (cResult.special === 'democracy') {
-                        onVote();
-                    } else {
-                        onFinish(pResult, cResult);
-                    }
-                }
-            }, [pResult, cResult]);
-
+            useEffect(() => { if (pResult && cResult && spinning) { setSpinning(false); if (cResult.special === 'democracy') onVote(); else onFinish(pResult, cResult); } }, [pResult, cResult]);
             return (
-                <div className="max-w-md mx-auto pt-8 px-6 sm:px-8 flex flex-col min-h-screen">
-                    <div className="flex justify-between items-center mb-8">
-                        <span className="text-xs font-black text-secondary uppercase tracking-[0.3em] italic">ROLETA EXTREME</span>
-                        <button onClick={onExit} className="text-[10px] font-black uppercase tracking-widest text-white/30">Sair</button>
+                <div className="max-w-md mx-auto pt-6 px-6 flex flex-col min-h-screen pb-10">
+                    <div className="flex justify-between items-center mb-6">
+                        <span className="text-[10px] font-black text-secondary uppercase tracking-[0.4em] italic leading-none">ROLETA EXTREME</span>
+                        <button onClick={onExit} className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Voltar</button>
                     </div>
                     <ShotTrack players={players} />
-                    <div className="flex flex-col gap-4 mb-10">
+                    <div className="flex flex-col gap-4 mb-8">
                         <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => setPResult(r)} />
-                        <div className="text-center font-black text-xl italic text-primary uppercase tracking-tighter">VAI...</div>
-                        <RouletteWheel items={ROULETTE_CHALLENGES} spin={spinning} onEnd={r => setCResult(r)} />
+                        <div className="text-center font-black text-xl italic text-primary uppercase tracking-tighter shadow-primary/20">VAI BEBER...</div>
+                        <RouletteWheel items={ROULETTE_BASE} spin={spinning} onEnd={r => setCResult(r)} />
                     </div>
-                    <div className="flex-1 flex flex-col items-center justify-center">
+                    <div className="flex-1 flex flex-col justify-center">
                         <AnimatePresence>
                             {(pResult && cResult) && (
-                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center glass p-8 w-full mb-8 border-white/10 relative overflow-hidden">
+                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center glass p-8 w-full border-white/10 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
                                     <h4 className="text-2xl font-black text-white italic uppercase mb-1 relative z-10 tracking-widest">{pResult}</h4>
                                     <p className="text-primary font-black text-2xl uppercase italic relative z-10 drop-shadow-md">{cResult.text}</p>
@@ -447,107 +409,96 @@
                             )}
                         </AnimatePresence>
                     </div>
-                    <button onClick={handleSpin} disabled={spinning} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest mb-10 disabled:opacity-50">GIRAR</button>
+                    <button onClick={() => { setSpinning(true); setPResult(null); setCResult(null); }} disabled={spinning} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase mt-8 disabled:opacity-50">GIRAR</button>
                 </div>
             );
         };
 
-        const StoryCard = ({ winner, placar, onRestart }) => (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black">
-                <div id="story-card" className="w-full max-w-sm aspect-[9/16] glass relative overflow-hidden flex flex-col items-center p-12 text-center border-white/10 bg-gradient-to-b from-primary/20 via-bg to-bg">
-                    <div className="mb-10 text-6xl">🏆</div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary mb-4">DRINK & PLAY | HALL OF FAME</h2>
-                    <div className="flex-1 flex flex-col justify-center w-full">
-                        <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest mb-2">Grande Sobrevivente</p>
-                        <h3 className="text-5xl font-black italic uppercase text-white text-glow mb-12">{winner.name}</h3>
-
-                        <div className="space-y-4 w-full px-4 text-left">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Placar Final</p>
-                            {placar.map((p, i) => (
+        const StoryCard = ({ players, onRestart }) => {
+            const winner = useMemo(() => [...players].sort((a, b) => a.shots - b.shots)[0], [players]);
+            const rankings = useMemo(() => [...players].sort((a, b) => b.shots - a.shots), [players]);
+            return (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black flex-col">
+                    <div className="w-full max-w-sm aspect-[9/16] glass p-12 flex flex-col items-center text-center relative overflow-hidden bg-gradient-to-b from-primary/20 via-bg to-bg border-white/10">
+                        <div className="text-6xl mb-8">👑</div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-6">HALL OF FAME</h2>
+                        <p className="text-gray-500 font-bold uppercase text-[9px] tracking-widest mb-1">Mestre da Resistência</p>
+                        <h3 className="text-5xl font-black italic uppercase mb-12 text-white">{winner.name}</h3>
+                        <div className="w-full space-y-4 text-left">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-4 opacity-70">Placar Etílico</p>
+                            {rankings.map((p, i) => (
                                 <div key={p.name} className="flex justify-between items-center border-b border-white/5 pb-2">
-                                    <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                        <span className="text-primary opacity-40">#{i + 1}</span> {p.name}
-                                    </span>
+                                    <span className="text-xs font-bold uppercase tracking-widest"><span className="text-primary/40 mr-2 italic">#{i + 1}</span> {p.name}</span>
                                     <span className="font-mono text-primary font-bold">{p.shots} 🥃</span>
                                 </div>
                             ))}
                         </div>
+                        <p className="mt-auto text-[10px] text-gray-700 font-bold tracking-[0.2em] italic uppercase">Drink & Play Experience</p>
                     </div>
-                    <p className="mt-auto text-[10px] text-gray-700 uppercase tracking-widest">Postado via Drink & Play @2026</p>
+                    <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
+                        <button className="glass py-4 font-black uppercase tracking-widest text-xs text-primary border-primary/20">Baixar Story</button>
+                        <button onClick={onRestart} className="btn-premium py-4 font-black uppercase tracking-widest text-xs">Nova Partida</button>
+                    </div>
                 </div>
-                <div className="fixed bottom-10 left-0 right-0 px-10 flex flex-col gap-3">
-                    <button className="glass py-4 font-black uppercase tracking-widest text-xs border-primary/20 text-primary">Baixar Story</button>
-                    <button onClick={onRestart} className="btn-premium py-4 font-black uppercase tracking-widest text-xs">Nova Partida</button>
-                </div>
+            );
+        };
+
+        const DemocracyVote = ({ players, onEnd }) => (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+                <GlassCard className="max-w-xs w-full text-center border-primary/20">
+                    <div className="text-4xl mb-4">⚖️</div>
+                    <h3 className="text-2xl font-black italic uppercase text-primary mb-2">VOTAÇÃO AO VIVO</h3>
+                    <p className="text-gray-400 text-xs mb-8 font-medium">Quem vai tomar esse shot?</p>
+                    <div className="grid grid-cols-1 gap-2">
+                        {players.map(p => (
+                            <button key={p.name} onClick={() => onEnd(p.name)} className="glass py-4 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-primary transition-all">{p.name}</button>
+                        ))}
+                    </div>
+                </GlassCard>
             </div>
         );
 
-        // --- Main App ---
+        // --- App ---
         function App() {
             const [view, setView] = useState('landing');
             const [players, setPlayers] = useState([]);
-            const [playerName, setPlayerName] = useState('');
+            const [name, setName] = useState('');
             const [gameId, setGameId] = useState(null);
             const [active, setActive] = useState(0);
             const [card, setCard] = useState(null);
+            const [customDeck, setCustomDeck] = useState([]);
             const [voting, setVoting] = useState(false);
-            const [showStory, setShowStory] = useState(false);
+            const [itCount, setItCount] = useState(0);
 
-            const handleAdd = () => {
-                const n = playerName.trim(); if (!n || players.some(p => p.name === n)) return;
-                setPlayers([...players, { name: n, shots: 0 }]); setPlayerName('');
-            };
-
-            const handleStart = async () => {
-                if (players.length < 2) return;
-                try {
-                    const { data } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single();
-                    if (data) setGameId(data.id);
-                } catch (e) { console.error(e); }
-                setView('menu');
-            };
-
-            const handleCardDraw = () => {
-                const deck = view === '18' ? CARDS_18 : CARDS_NORMAL;
+            const handleAdd = () => { if (name.trim() && !players.some(p => p.name === name.trim())) { setPlayers([...players, { name: name.trim(), shots: 0 }]); setName(''); } };
+            const handleStart = async () => { if (players.length < 2) return; const { data } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single(); if (data) setGameId(data.id); setView('menu'); };
+            const handleDraw = () => {
+                const deck = view === '18' ? CARDS_18 : (view === 'custom' ? customDeck : CARDS_NORMAL);
                 const c = deck[Math.floor(Math.random() * deck.length)];
-                setCard({ ...c, for: players[active].name });
-                const newP = [...players];
+                setCard(c); const newP = [...players];
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
                 else if (c.bonus > 0) newP[active].shots += c.bonus;
-                setPlayers(newP); setActive((active + 1) % players.length);
+                setPlayers(newP); setActive((active + 1) % players.length); setItCount(itCount + 1);
                 if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then();
-
-                // Demo finish after 15 cards
-                if (Math.random() > 0.95) setShowStory(true);
+                if (itCount > 20) setView('finish');
             };
-
-            const handleRouletteFinish = (name, chal) => {
-                const newP = [...players];
-                const pIdx = newP.findIndex(x => x.name === name);
-                if (pIdx !== -1 && chal.bonus > 0) {
-                    newP[pIdx].shots += chal.bonus;
-                    setPlayers(newP);
-                    if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then();
-                }
-            };
-
-            const handleRestart = () => {
-                setPlayers(players.map(p => ({ ...p, shots: 0 })));
-                setShowStory(false);
-                setView('menu');
-            };
+            const updateShot = (pName, b) => { const newP = [...players]; const idx = newP.findIndex(x => x.name === pName); if (idx !== -1) { newP[idx].shots += b; setPlayers(newP); if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then(); } };
 
             return (
                 <main>
                     <AnimatePresence mode="wait">
                         {view === 'landing' && <LandingView key="l" onStart={() => setView('setup')} />}
-                        {view === 'setup' && <SetupView key="s" players={players} name={playerName} setName={setPlayerName} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
-                        {view === 'menu' && <MenuView key="m" onSelectMode={m => setView(m)} />}
-                        {(view === 'cards' || view === '18') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : 'MODO CARTAS'} players={players} active={active} card={card} onDraw={handleCardDraw} onExit={() => setView('menu')} />}
-                        {view === 'roulette' && <RouletteView key="r" players={players} onExit={() => setView('menu')} onFinish={handleRouletteFinish} onVote={() => setVoting(true)} />}
+                        {view === 'setup' && <SetupView key="s" players={players} name={name} setName={setName} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
+                        {view === 'menu' && <MenuView key="m" onSelectMode={m => setView(m)} onCustom={() => setView('custom-editor')} />}
+                        {view === 'custom-editor' && <CustomCreator key="ce" deck={customDeck} onSave={d => { setCustomDeck(d); setView('menu'); }} onBack={() => setView('menu')} />}
+                        {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} />}
+                        {view === 'roulette' && <RouletteView key="r" players={players} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} />}
+                        {view === 'finish' && <StoryCard key="f" players={players} onRestart={() => { setPlayers(players.map(p => ({ ...p, shots: 0 }))); setItCount(0); setView('menu'); }} />}
                     </AnimatePresence>
-                    {voting && <DemoVote players={players} onEnd={(name) => { handleRouletteFinish(name, { bonus: 1 }); setVoting(false); }} />}
-                    {showStory && <StoryCard winner={[...players].sort((a, b) => a.shots - b.shots)[0]} placar={[...players].sort((a, b) => b.shots - a.shots)} onRestart={handleRestart} />}
+                    {voting && <DemocracyVote players={players} onEnd={n => { updateShot(n, 1); setVoting(false); }} />}
+                    <div className="fixed bottom-4 right-4 z-50">
+                        {itCount > 5 && view !== 'finish' && view !== 'landing' && view !== 'setup' && <button onClick={() => setView('finish')} className="glass py-2 px-4 text-[9px] font-black uppercase text-primary/60 border-primary/20">Finalizar Partida</button>}
+                    </div>
                 </main>
             );
         }
