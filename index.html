@@ -21,6 +21,7 @@
             --primary: #ff006e;
             --secondary: #8338ec;
             --bg: #030712;
+            --accent: #ffbe0b;
         }
 
         * {
@@ -126,6 +127,21 @@
             border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-4px);
         }
+
+        /* Mobile fixes */
+        @media (max-width: 640px) {
+            .text-6xl {
+                font-size: 3.5rem;
+            }
+
+            .p-10 {
+                padding: 1.5rem;
+            }
+
+            .gap-6 {
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -140,12 +156,13 @@
         const motion = window.Motion?.motion || MotionProxy;
         const AnimatePresence = window.Motion?.AnimatePresence || (({ children }) => <>{children}</>);
 
-        // --- Config ---
+        // --- Supabase ---
         const SUPABASE_URL = 'https://rzgoaeyqkpgdwhuozdkf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z29hZXlxa3BnZHdodW96ZGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyOTI2NTcsImV4cCI6MjA4MDg2ODY1N30.VtpQYkKJwIxZmtFTnfU9QxJMrnsNLEy5LjOUaZtQktA';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const CARDS = [
+        // --- Data ---
+        const CARDS_NORMAL = [
             { text: "🥃 Beba 1 shot", type: "drink", bonus: 1 },
             { text: "🥃🥃 Beba 2 shots", type: "drink", bonus: 2 },
             { text: "🍻 Todos bebem!", type: "everyone", bonus: 1 },
@@ -153,22 +170,34 @@
             { text: "👉 Escolha alguém para beber", type: "choose", bonus: 0 },
             { text: "🎤 Conte uma piada ou beba 2 shots", type: "challenge", bonus: 2 },
             { text: "🤔 Verdade ou shot", type: "challenge", bonus: 1 },
-            { text: "📜 Crie uma regra nova!", type: "rule", bonus: 0 },
-            { text: "😂 Quem rir, bebe!", type: "trap", bonus: 1 },
+            { text: "📜 Crie uma regra!", type: "rule", bonus: 0 },
             { text: "🖤 Quem usa preto, bebe!", type: "trap", bonus: 1 },
             { text: "📱 Quem mexer no celular, bebe!", type: "trap", bonus: 1 },
-            { text: "🫣 Revele um segredo ou beba 3 shots", type: "challenge", bonus: 3 }
+            { text: "🫣 Segredo ou 3 shots", type: "challenge", bonus: 3 }
+        ];
+
+        const CARDS_18 = [
+            { text: "🔞 Beije alguém ou beba 3 shots", type: "challenge", bonus: 3 },
+            { text: "🔥 Mostre sua última busca ou beba 2", type: "challenge", bonus: 2 },
+            { text: "😏 Faça uma massagem ou beba 2", type: "challenge", bonus: 2 },
+            { text: "🥃 Beba se já ficou com alguém aqui", type: "drink", bonus: 1 },
+            { text: "🫣 Verdade picante ou 3 shots", type: "challenge", bonus: 3 },
+            { text: "🧊 Gelo no corpo ou beba 2 shots", type: "challenge", bonus: 2 },
+            { text: "🍻 Todos que já fizeram 'menage' bebem", type: "everyone", bonus: 1 }
         ];
 
         const ROULETTE_CHALLENGES = [
-            { text: "🥃 Beba 1 shot", icon: "🥃", bonus: 1 },
-            { text: "🥃🥃 Beba 2 shots", icon: "🥃", bonus: 2 },
-            { text: "🍻 Todos bebem!", icon: "🍻", bonus: 1 },
-            { text: "😎 Safou! Não bebe", icon: "😌", bonus: 0 },
-            { text: "👉 Escolha 1", icon: "👉", bonus: 0 },
-            { text: "🎤 Cante algo", icon: "🎤", bonus: 0 },
-            { text: "🤔 Verdade/Shot", icon: "🤔", bonus: 1 },
-            { text: "🤣 Conte piada", icon: "🤣", bonus: 0 }
+            { text: "😌 Não bebe", bonus: 0 },
+            { text: "🥃 Beba 1 shot", bonus: 1 },
+            { text: "🥃🥃 Beba 2 shots", bonus: 2 },
+            { text: "🍻 Todos bebem", bonus: 1 },
+            { text: "😎 Todos bebem menos você", bonus: 0 },
+            { text: "👉 Escolha alguém para beber", bonus: 0 },
+            { text: "👥 Escolha dois para beber", bonus: 0 },
+            { text: "➡️ O próximo jogador bebe", bonus: 0 },
+            { text: "🎤 Piada ou 2 shots", bonus: 2 },
+            { text: "🤔 Verdade ou shot", bonus: 1 },
+            { text: "🗳️ Votação ao Vivo", bonus: 0, special: "democracy" }
         ];
 
         const THEMES = { drink: "from-rose-500 to-pink-600", everyone: "from-indigo-500 to-purple-600", safe: "from-emerald-400 to-teal-500", choose: "from-amber-400 to-orange-500", challenge: "from-orange-400 to-red-500", rule: "from-cyan-400 to-blue-500", trap: "from-red-600 to-pink-700" };
@@ -177,17 +206,51 @@
             Sparkles: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3 1.912 5.886L19.8 10.8 13.912 12.714 12 18.6l-1.912-5.886L4.2 10.8l5.886-1.914L12 3Z"></path></svg>,
             Plus: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
             Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
-            Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            Share: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>,
+            User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         };
 
-        // --- Components ---
+        // --- Layout Components ---
+        const GlassCard = ({ children, className = "" }) => (
+            <div className={`glass border-white/5 p-6 sm:p-8 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const ShotTrack = ({ players }) => (
+            <div className="flex gap-2 overflow-x-auto custom-scroll pb-2 mb-6">
+                {players.map(p => (
+                    <div key={p.name} className="flex-shrink-0 glass px-4 py-2 flex items-center gap-2 border-white/10">
+                        <span className="text-xs font-bold uppercase tracking-widest text-white/50">{p.name}</span>
+                        <span className="text-primary font-black">{p.shots}</span>
+                    </div>
+                ))}
+            </div>
+        );
+
+        const DemoVote = ({ players, onEnd }) => (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+                <GlassCard className="w-full max-w-sm text-center">
+                    <h3 className="text-2xl font-black italic uppercase text-primary mb-4">DEMOCRACIA ETÍLICA</h3>
+                    <p className="text-gray-400 mb-8 font-medium">O grupo vota: quem deve beber essa rodada?</p>
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                        {players.map(p => (
+                            <button key={p.name} onClick={() => onEnd(p.name)} className="glass py-3 font-bold uppercase text-xs hover:bg-primary transition-all tracking-widest">{p.name}</button>
+                        ))}
+                    </div>
+                    <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">O mais citado toma o shot!</p>
+                </GlassCard>
+            </div>
+        );
+
         const RouletteWheel = ({ items, spin, onEnd }) => {
             const [offset, setOffset] = useState(0);
             const itemH = 60;
 
             useEffect(() => {
                 if (spin) {
-                    const extraSpins = 5 + Math.floor(Math.random() * 5);
+                    const extraSpins = 8 + Math.floor(Math.random() * 4);
                     const targetIdx = Math.floor(Math.random() * items.length);
                     const totalOffset = (extraSpins * items.length + targetIdx) * itemH;
                     setOffset(totalOffset);
@@ -210,7 +273,7 @@
                         className="flex flex-col"
                     >
                         {displayItems.map((it, i) => (
-                            <div key={i} className="h-[60px] flex items-center justify-center font-bold text-lg tracking-wider text-white/80">
+                            <div key={i} className="h-[60px] flex items-center justify-center font-bold text-lg tracking-wider text-white/80 uppercase italic whitespace-nowrap px-4">
                                 {typeof it === 'string' ? it : it.text}
                             </div>
                         ))}
@@ -219,32 +282,30 @@
             );
         };
 
+        // --- Views ---
         const LandingView = ({ onStart }) => (
-            <div className="flex flex-col items-center justify-center min-h-screen text-center px-6 pb-20">
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-[100px] mb-4">🥃</motion.div>
-                <h1 className="text-6xl md:text-7xl font-extrabold gradient-text italic leading-none text-glow uppercase mb-4">Drink <br /><span className="text-primary">&</span> Play</h1>
-                <p className="text-gray-400 mb-10 max-w-xs font-light">A experiência social definitiva para suas noites premium.</p>
-                <button onClick={onStart} className="btn-premium px-12 py-5 rounded-full text-xl font-bold uppercase tracking-widest text-white shadow-2xl mb-16">Entrar na Roda</button>
+            <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-8xl sm:text-[100px] mb-4">🥃</motion.div>
+                <h1 className="text-5xl sm:text-7xl font-extrabold gradient-text italic leading-none text-glow uppercase mb-4">Drink <br /><span className="text-primary">&</span> Play</h1>
+                <p className="text-gray-400 mb-10 max-w-xs font-light text-sm">Elevando suas sociais com responsabilidade e diversão premium.</p>
+                <button onClick={onStart} className="btn-premium px-12 py-5 rounded-full text-xl font-bold uppercase tracking-[0.2em] text-white shadow-2xl mb-12">Entrar na Roda</button>
 
-                {/* Quick Guide */}
-                <div className="max-w-md w-full glass p-8 text-left border-white/5">
-                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-primary mb-6 flex items-center gap-2">
-                        <Icons.Sparkles /> Guia Rápido
+                <div className="max-w-md w-full glass p-6 sm:p-8 text-left border-white/5 mb-10">
+                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-6 flex items-center gap-2 italic">
+                        <Icons.Sparkles /> Guia da Plataforma
                     </h3>
                     <div className="space-y-4">
                         {[
-                            { t: "Configuração", d: "Adicione os nomes dos participantes na próxima tela." },
-                            { t: "Modo Cartas", d: "Puxe cartas e cumpra os desafios aleatórios de sorte." },
-                            { t: "Modo Roleta", d: "Gire para decidir quem bebe e qual o desafio da vez." },
-                            { t: "Sincronização", d: "Seu progresso é salvo automaticamente no servidor." }
+                            { t: "Montagem", d: "Crie seu esquadrão com os nomes da galera." },
+                            { t: "Desafios", d: "Cartas imersivas ou Roleta Extreme de democracia." },
+                            { t: "Custom", d: "No menu, crie seus próprios desafios personalizados." },
+                            { t: "Social", d: "Gere seu Story-Card no final para postar no Insta." }
                         ].map((item, i) => (
                             <div key={i} className="flex gap-4 items-start">
-                                <div className="mt-1 w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-primary">
-                                    <Icons.Check />
-                                </div>
+                                <div className="mt-1 w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-primary"><Icons.Check /></div>
                                 <div>
-                                    <p className="text-sm font-bold text-white uppercase tracking-wider">{item.t}</p>
-                                    <p className="text-xs text-gray-500 leading-relaxed">{item.d}</p>
+                                    <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">{item.t}</p>
+                                    <p className="text-[11px] text-gray-500 leading-tight">{item.d}</p>
                                 </div>
                             </div>
                         ))}
@@ -254,125 +315,174 @@
         );
 
         const MenuView = ({ onSelectMode }) => (
-            <div className="max-w-md mx-auto pt-20 px-8 flex flex-col gap-6 pb-20">
+            <div className="max-w-md mx-auto pt-16 px-6 sm:px-8 flex flex-col gap-6 pb-20">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <h2 className="text-4xl font-black italic uppercase mb-2">MODALIDADES</h2>
-                    <p className="text-gray-500 mb-8 uppercase tracking-widest text-xs font-bold">Escolha como quer jogar</p>
+                    <h2 className="text-4xl font-black italic uppercase mb-1">MODALIDADES</h2>
+                    <p className="text-gray-600 mb-8 uppercase tracking-[0.2em] text-[10px] font-bold">Escolha seu destino alcóolico</p>
                 </motion.div>
 
-                {/* Styled Cards like requested */}
-                <button onClick={() => onSelectMode('cards')} className="card-selection glass p-6 flex items-center gap-6 text-left group overflow-hidden relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform z-10">🃏</div>
+                <button onClick={() => onSelectMode('cards')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-rose-500/10 hover:border-rose-500/30">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🃏</div>
                     <div className="z-10">
-                        <h3 className="text-2xl font-black text-primary italic uppercase mb-1">Cartas</h3>
-                        <p className="text-gray-400 text-sm font-medium">Desafios aleatórios em formato de deck.</p>
+                        <h3 className="text-xl sm:text-2xl font-black text-rose-500 italic uppercase">Cartas</h3>
+                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Deck clássico de desafios</p>
                     </div>
                 </button>
 
-                <button onClick={() => onSelectMode('roulette')} className="card-selection glass p-6 flex items-center gap-6 text-left group overflow-hidden relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform z-10">🎰</div>
+                <button onClick={() => onSelectMode('roulette')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-purple-500/10 hover:border-purple-500/30">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🎰</div>
                     <div className="z-10">
-                        <h3 className="text-2xl font-black text-secondary italic uppercase mb-1">Roleta</h3>
-                        <p className="text-gray-400 text-sm font-medium">Gire para descobrir o seu destino.</p>
+                        <h3 className="text-xl sm:text-2xl font-black text-purple-500 italic uppercase">Roleta</h3>
+                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Quem o destino escolherá?</p>
                     </div>
                 </button>
+
+                <button onClick={() => onSelectMode('18')} className="card-selection glass p-6 flex items-center gap-5 text-left group overflow-hidden relative border-amber-500/10 hover:border-amber-500/30">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 transition-transform z-10">🔞</div>
+                    <div className="z-10">
+                        <h3 className="text-xl sm:text-2xl font-black text-amber-500 italic uppercase">Modo 18</h3>
+                        <p className="text-gray-500 text-[11px] font-bold tracking-wider uppercase">Apenas para os corajosos +18</p>
+                    </div>
+                </button>
+
+                <div className="mt-8 pt-8 border-t border-white/5 text-center">
+                    <p className="text-[10px] text-gray-700 uppercase tracking-[0.3em] mb-4">Em breve: Modo Customizado</p>
+                    <button onClick={() => setView('custom')} className="text-xs font-black text-primary/40 uppercase tracking-widest hover:text-primary transition-all">Criar seu próprio deck</button>
+                </div>
             </div>
         );
 
         const SetupView = ({ players, onAdd, onRemove, onStart, name, setName }) => (
-            <div className="max-w-md mx-auto pt-20 px-8 flex flex-col min-h-screen">
+            <div className="max-w-md mx-auto pt-16 px-6 sm:px-8 flex flex-col min-h-screen">
                 <h2 className="text-4xl font-black italic uppercase mb-2">Esquadrão</h2>
-                <p className="text-gray-400 mb-10">Quem está na roda hoje?</p>
-                <div className="glass p-6 mb-10 overflow-hidden relative">
+                <p className="text-gray-500 uppercase tracking-widest text-[10px] font-bold mb-10">Quem vai pro abate?</p>
+                <GlassCard className="mb-10">
                     <div className="flex gap-2 mb-6">
-                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary transition-all font-bold tracking-widest" />
-                        <button onClick={onAdd} className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg"><Icons.Plus /></button>
+                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-primary transition-all font-bold tracking-widest flex-shrink-1 min-w-0" />
+                        <button onClick={onAdd} className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center shadow-lg"><Icons.Plus /></button>
                     </div>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2">
+                    <div className="space-y-3 max-h-[350px] overflow-y-auto custom-scroll pr-2">
                         {players.map(p => (
                             <div key={p.name} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
-                                <span className="font-bold tracking-wide uppercase text-sm">{p.name}</span>
-                                <button onClick={() => onRemove(p.name)} className="text-gray-600 hover:text-red-500 transition-colors"><Icons.Trash /></button>
+                                <span className="font-black tracking-widest uppercase text-xs">{p.name}</span>
+                                <button onClick={() => onRemove(p.name)} className="text-gray-600 hover:text-red-500"><Icons.Trash /></button>
                             </div>
                         ))}
                     </div>
+                </GlassCard>
+                <div className="mt-auto pb-10">
+                    <button onClick={onStart} disabled={players.length < 2} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-20">Confirmar</button>
                 </div>
-                <button onClick={onStart} disabled={players.length < 2} className="btn-premium w-full py-5 rounded-3xl text-xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-20 mt-auto mb-10">Confirmar Time</button>
             </div>
         );
 
-        const CardsView = ({ players, active, onDraw, card, onExit }) => (
-            <div className="max-w-md mx-auto pt-10 px-8 flex flex-col min-h-screen">
-                <div className="flex justify-between items-center mb-10">
-                    <span className="text-xs font-black text-primary uppercase tracking-[0.3em] italic">MODO CARTAS</span>
-                    <button onClick={onExit} className="text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white transition-all">Sair</button>
+        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel }) => (
+            <div className="max-w-md mx-auto pt-8 px-6 sm:px-8 flex flex-col min-h-screen">
+                <div className="flex justify-between items-center mb-8">
+                    <span className="text-xs font-black text-primary uppercase tracking-[0.3em] italic">{modeLabel}</span>
+                    <button onClick={onExit} className="text-[10px] font-black uppercase tracking-widest text-white/30">Sair</button>
                 </div>
-                <div className="text-center mb-10">
-                    <p className="text-xs uppercase font-black tracking-[0.3em] text-gray-600 mb-2">Vez de</p>
+                <ShotTrack players={players} />
+                <div className="text-center mb-8">
+                    <p className="text-[10px] uppercase font-black tracking-[0.3em] text-gray-600 mb-2 italic">Vez de</p>
                     <h2 className="text-4xl font-black italic uppercase text-glow">{players[active]?.name}</h2>
                 </div>
-                <div className="relative h-[380px] mb-12 cursor-pointer" onClick={onDraw}>
+                <div className="relative h-[360px] cursor-pointer" onClick={onDraw}>
                     <div className={`w-full h-full glass rounded-[40px] border-2 border-dashed border-white/10 flex flex-col items-center justify-center transition-all duration-500 ${card ? 'opacity-0 scale-90 translate-y-10' : 'opacity-100 scale-100'}`}>
-                        <div className="text-8xl mb-6">🃏</div><p className="font-black text-gray-500 italic uppercase tracking-widest text-sm">Sacar Carta</p>
+                        <div className="text-8xl mb-6">🃏</div><p className="font-black text-gray-500 italic uppercase tracking-widest text-xs">Puxar Carta</p>
                     </div>
                     <AnimatePresence>
                         {card && (
-                            <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} className={`absolute inset-0 rounded-[40px] p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl border border-white/20 ${THEMES[card.type] || 'from-gray-800 to-black'}`}>
-                                <div className="absolute top-8 left-8 text-white/20 font-black italic uppercase text-xs tracking-[0.2em]">Desafio</div>
-                                <h3 className="text-3xl font-black text-white leading-tight uppercase italic drop-shadow-lg">{card.text}</h3>
-                                <div className="mt-10 p-4 bg-white/20 rounded-2xl flex gap-3">{Array(card.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-3xl">{s}</span>)}</div>
+                            <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} className={`absolute inset-0 rounded-[40px] p-8 sm:p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl border border-white/10 ${THEMES[card.type] || 'from-gray-800 to-black'}`}>
+                                <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight uppercase italic drop-shadow-lg">{card.text}</h3>
+                                <div className="mt-10 p-4 bg-white/20 rounded-2xl flex gap-3">{Array(card.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-2xl">{s}</span>)}</div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
-                <button onClick={onDraw} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl mt-auto mb-10">{card ? 'PRÓXIMA RODADA' : 'INICIAR'}</button>
+                <div className="mt-auto pb-10">
+                    <button onClick={onDraw} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest shadow-2xl">{card ? 'PRÓXIMA' : 'INICIAR'}</button>
+                </div>
             </div>
         );
 
-        const RouletteView = ({ players, onExit, onFinish }) => {
+        const RouletteView = ({ players, onExit, onFinish, onVote }) => {
             const [spinning, setSpinning] = useState(false);
             const [pResult, setPResult] = useState(null);
             const [cResult, setCResult] = useState(null);
 
             const handleSpin = () => { if (spinning) return; setSpinning(true); setPResult(null); setCResult(null); };
 
-            // Fix for Error #301: use useEffect to trigger finish when BOTH are ready
             useEffect(() => {
                 if (pResult && cResult && spinning) {
                     setSpinning(false);
-                    onFinish(pResult, cResult);
+                    if (cResult.special === 'democracy') {
+                        onVote();
+                    } else {
+                        onFinish(pResult, cResult);
+                    }
                 }
             }, [pResult, cResult]);
 
             return (
-                <div className="max-w-md mx-auto pt-10 px-8 flex flex-col min-h-screen">
-                    <div className="flex justify-between items-center mb-10">
+                <div className="max-w-md mx-auto pt-8 px-6 sm:px-8 flex flex-col min-h-screen">
+                    <div className="flex justify-between items-center mb-8">
                         <span className="text-xs font-black text-secondary uppercase tracking-[0.3em] italic">ROLETA EXTREME</span>
-                        <button onClick={onExit} className="text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white transition-all">Sair</button>
+                        <button onClick={onExit} className="text-[10px] font-black uppercase tracking-widest text-white/30">Sair</button>
                     </div>
-                    <div className="flex flex-col gap-6 mb-12">
-                        <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => { setPResult(r); }} />
-                        <div className="text-center font-black text-2xl italic text-primary uppercase tracking-tighter shadow-primary/20">VAI BEBER...</div>
-                        <RouletteWheel items={ROULETTE_CHALLENGES} spin={spinning} onEnd={r => { setCResult(r); }} />
+                    <ShotTrack players={players} />
+                    <div className="flex flex-col gap-4 mb-10">
+                        <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => setPResult(r)} />
+                        <div className="text-center font-black text-xl italic text-primary uppercase tracking-tighter">VAI...</div>
+                        <RouletteWheel items={ROULETTE_CHALLENGES} spin={spinning} onEnd={r => setCResult(r)} />
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center">
                         <AnimatePresence>
                             {(pResult && cResult) && (
-                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center glass p-8 w-full mb-10 border-white/10 relative overflow-hidden">
+                                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center glass p-8 w-full mb-8 border-white/10 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                                    <h4 className="text-2xl font-black text-white italic uppercase mb-2 relative z-10 tracking-widest">{pResult}</h4>
-                                    <p className="text-primary font-black text-3xl uppercase italic relative z-10 transition-all drop-shadow-md">{cResult.text}</p>
+                                    <h4 className="text-2xl font-black text-white italic uppercase mb-1 relative z-10 tracking-widest">{pResult}</h4>
+                                    <p className="text-primary font-black text-2xl uppercase italic relative z-10 drop-shadow-md">{cResult.text}</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
-                    <button onClick={handleSpin} disabled={spinning} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest mb-10 disabled:opacity-50 shadow-2xl">GIRAR SORTE</button>
+                    <button onClick={handleSpin} disabled={spinning} className="btn-premium w-full py-6 rounded-3xl text-2xl font-black uppercase tracking-widest mb-10 disabled:opacity-50">GIRAR</button>
                 </div>
             );
         };
 
+        const StoryCard = ({ winner, placar, onRestart }) => (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black">
+                <div id="story-card" className="w-full max-w-sm aspect-[9/16] glass relative overflow-hidden flex flex-col items-center p-12 text-center border-white/10 bg-gradient-to-b from-primary/20 via-bg to-bg">
+                    <div className="mb-10 text-6xl">🏆</div>
+                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-primary mb-4">DRINK & PLAY | HALL OF FAME</h2>
+                    <div className="flex-1 flex flex-col justify-center w-full">
+                        <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest mb-2">Grande Sobrevivente</p>
+                        <h3 className="text-5xl font-black italic uppercase text-white text-glow mb-12">{winner.name}</h3>
+
+                        <div className="space-y-4 w-full px-4 text-left">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Placar Final</p>
+                            {placar.map((p, i) => (
+                                <div key={p.name} className="flex justify-between items-center border-b border-white/5 pb-2">
+                                    <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <span className="text-primary opacity-40">#{i + 1}</span> {p.name}
+                                    </span>
+                                    <span className="font-mono text-primary font-bold">{p.shots} 🥃</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="mt-auto text-[10px] text-gray-700 uppercase tracking-widest">Postado via Drink & Play @2026</p>
+                </div>
+                <div className="fixed bottom-10 left-0 right-0 px-10 flex flex-col gap-3">
+                    <button className="glass py-4 font-black uppercase tracking-widest text-xs border-primary/20 text-primary">Baixar Story</button>
+                    <button onClick={onRestart} className="btn-premium py-4 font-black uppercase tracking-widest text-xs">Nova Partida</button>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
         function App() {
             const [view, setView] = useState('landing');
             const [players, setPlayers] = useState([]);
@@ -380,6 +490,8 @@
             const [gameId, setGameId] = useState(null);
             const [active, setActive] = useState(0);
             const [card, setCard] = useState(null);
+            const [voting, setVoting] = useState(false);
+            const [showStory, setShowStory] = useState(false);
 
             const handleAdd = () => {
                 const n = playerName.trim(); if (!n || players.some(p => p.name === n)) return;
@@ -396,13 +508,17 @@
             };
 
             const handleCardDraw = () => {
-                const c = CARDS[Math.floor(Math.random() * CARDS.length)];
+                const deck = view === '18' ? CARDS_18 : CARDS_NORMAL;
+                const c = deck[Math.floor(Math.random() * deck.length)];
                 setCard({ ...c, for: players[active].name });
                 const newP = [...players];
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
                 else if (c.bonus > 0) newP[active].shots += c.bonus;
                 setPlayers(newP); setActive((active + 1) % players.length);
                 if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then();
+
+                // Demo finish after 15 cards
+                if (Math.random() > 0.95) setShowStory(true);
             };
 
             const handleRouletteFinish = (name, chal) => {
@@ -415,15 +531,23 @@
                 }
             };
 
+            const handleRestart = () => {
+                setPlayers(players.map(p => ({ ...p, shots: 0 })));
+                setShowStory(false);
+                setView('menu');
+            };
+
             return (
                 <main>
                     <AnimatePresence mode="wait">
                         {view === 'landing' && <LandingView key="l" onStart={() => setView('setup')} />}
                         {view === 'setup' && <SetupView key="s" players={players} name={playerName} setName={setPlayerName} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
                         {view === 'menu' && <MenuView key="m" onSelectMode={m => setView(m)} />}
-                        {view === 'cards' && <CardsView key="c" players={players} active={active} card={card} onDraw={handleCardDraw} onExit={() => setView('menu')} />}
-                        {view === 'roulette' && <RouletteView key="r" players={players} onExit={() => setView('menu')} onFinish={handleRouletteFinish} />}
+                        {(view === 'cards' || view === '18') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : 'MODO CARTAS'} players={players} active={active} card={card} onDraw={handleCardDraw} onExit={() => setView('menu')} />}
+                        {view === 'roulette' && <RouletteView key="r" players={players} onExit={() => setView('menu')} onFinish={handleRouletteFinish} onVote={() => setVoting(true)} />}
                     </AnimatePresence>
+                    {voting && <DemoVote players={players} onEnd={(name) => { handleRouletteFinish(name, { bonus: 1 }); setVoting(false); }} />}
+                    {showStory && <StoryCard winner={[...players].sort((a, b) => a.shots - b.shots)[0]} placar={[...players].sort((a, b) => b.shots - a.shots)} onRestart={handleRestart} />}
                 </main>
             );
         }
