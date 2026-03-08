@@ -129,7 +129,18 @@
     <script type="text/babel">
         // Import components safely from CDN global
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
-        const { motion, AnimatePresence } = window.framerMotion || { motion: (p) => <div {...p} />, AnimatePresence: (p) => <>{p.children}</> };
+
+        // --- Framer Motion Helper ---
+        // Framer Motion on CDN can be tricky with the global name. 
+        // We use a proxy to fallback to normal divs if not loaded.
+        const MotionProxy = new Proxy({}, {
+            get: (target, prop) => {
+                return (props) => <div {...props} />;
+            }
+        });
+
+        const motion = window.Motion?.motion || MotionProxy;
+        const AnimatePresence = window.Motion?.AnimatePresence || (({ children }) => <>{children}</>);
 
         // --- Supabase Client ---
         const SUPABASE_URL = 'https://rzgoaeyqkpgdwhuozdkf.supabase.co';
