@@ -7,28 +7,20 @@
     <title>DRINK & PLAY | Premium Experience</title>
     <link rel="icon"
         href="data:image/x-icon;base64,AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAnAAAA">
-
-    <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
-
-    <!-- Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
-
     <style>
         :root {
             --primary: #ff006e;
             --secondary: #8338ec;
-            --accent: #ffbe0b;
             --bg: #030712;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -55,7 +47,6 @@
 
         .btn-premium {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            box-shadow: 0 0 20px rgba(255, 0, 110, 0.2);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -76,44 +67,54 @@
         }
 
         @keyframes mesh {
-            0% {
+
+            0%,
+            100% {
                 transform: scale(1) translate(0, 0);
             }
 
             50% {
                 transform: scale(1.1) translate(20px, 10px);
             }
-
-            100% {
-                transform: scale(1) translate(0, 0);
-            }
         }
 
         .mesh-gradient {
-            background: radial-gradient(circle at 50% 50%, #ff006e15 0%, transparent 50%),
-                radial-gradient(circle at 0% 0%, #8338ec15 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, #3a86ff10 0%, transparent 40%);
+            background: radial-gradient(circle at 50% 50%, #ff006e15 0%, transparent 50%), radial-gradient(circle at 100% 100%, #3a86ff10 0%, transparent 40%);
             filter: blur(80px);
             animation: mesh 10s infinite ease-in-out;
-        }
-
-        input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(255, 0, 110, 0.1);
         }
 
         .custom-scroll::-webkit-scrollbar {
             width: 4px;
         }
 
-        .custom-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
         .custom-scroll::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
+        }
+
+        .roulette-container {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .roulette-marker {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 50px;
+            transform: translateY(-50%);
+            border: 2px solid var(--primary);
+            background: rgba(255, 0, 110, 0.1);
+            z-index: 10;
+            pointer-events: none;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.2);
         }
     </style>
 </head>
@@ -122,23 +123,18 @@
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
         <div class="mesh-gradient absolute inset-0"></div>
     </div>
-
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
-
-        // --- Framer Motion Helper ---
+        const { useState, useEffect, useRef, useMemo } = React;
         const MotionProxy = new Proxy({}, { get: (t, p) => (props) => <div {...props} /> });
         const motion = window.Motion?.motion || MotionProxy;
         const AnimatePresence = window.Motion?.AnimatePresence || (({ children }) => <>{children}</>);
 
-        // --- Supabase ---
+        // --- Config ---
         const SUPABASE_URL = 'https://rzgoaeyqkpgdwhuozdkf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z29hZXlxa3BnZHdodW96ZGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyOTI2NTcsImV4cCI6MjA4MDg2ODY1N30.VtpQYkKJwIxZmtFTnfU9QxJMrnsNLEy5LjOUaZtQktA';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Constants ---
         const CARDS = [
             { text: "🥃 Beba 1 shot", type: "drink", bonus: 1 },
             { text: "🥃🥃 Beba 2 shots", type: "drink", bonus: 2 },
@@ -151,192 +147,226 @@
             { text: "😂 Quem rir, bebe!", type: "trap", bonus: 1 },
             { text: "🖤 Quem usa preto, bebe!", type: "trap", bonus: 1 },
             { text: "📱 Quem mexer no celular, bebe!", type: "trap", bonus: 1 },
-            { text: "🫣 Revele um segredo ou beba 3 shots", type: "challenge", bonus: 3 },
-            { text: "🧊 Fique sem beber por 2 rodadas", type: "safe", bonus: 0 }
+            { text: "🫣 Revele um segredo ou beba 3 shots", type: "challenge", bonus: 3 }
         ];
 
-        const THEMES = {
-            drink: "from-rose-500 to-pink-600 shadow-rose-500/20",
-            everyone: "from-indigo-500 to-purple-600 shadow-indigo-500/20",
-            safe: "from-emerald-400 to-teal-500 shadow-emerald-400/20",
-            choose: "from-amber-400 to-orange-500 shadow-amber-400/20",
-            challenge: "from-orange-400 to-red-500 shadow-orange-400/20",
-            rule: "from-cyan-400 to-blue-500 shadow-cyan-400/20",
-            trap: "from-red-600 to-pink-700 shadow-red-600/20"
-        };
+        const ROULETTE_CHALLENGES = [
+            { text: "🥃 Beba 1 shot", icon: "🥃", bonus: 1 },
+            { text: "🥃🥃 Beba 2 shots", icon: "🥃", bonus: 2 },
+            { text: "🍻 Todos bebem!", icon: "🍻", bonus: 1 },
+            { text: "😎 Safou! Não bebe", icon: "😌", bonus: 0 },
+            { text: "👉 Escolha 1", icon: "👉", bonus: 0 },
+            { text: "🎤 Cante algo", icon: "🎤", bonus: 0 },
+            { text: "🤔 Verdade/Shot", icon: "🤔", bonus: 1 },
+            { text: "🤣 Conte piada", icon: "🤣", bonus: 0 }
+        ];
+
+        const THEMES = { drink: "from-rose-500 to-pink-600", everyone: "from-indigo-500 to-purple-600", safe: "from-emerald-400 to-teal-500", choose: "from-amber-400 to-orange-500", challenge: "from-orange-400 to-red-500", rule: "from-cyan-400 to-blue-500", trap: "from-red-600 to-pink-700" };
 
         const Icons = {
-            Sparkles: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3 1.912 5.886L19.8 10.8 13.912 12.714 12 18.6l-1.912-5.886L4.2 10.8l5.886-1.914L12 3Z"></path></svg>,
+            Sparkles: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3 1.912 5.886L19.8 10.8 13.912 12.714 12 18.6l-1.912-5.886L4.2 10.8l5.886-1.914L12 3Z"></path></svg>,
             Plus: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
-            Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
-            ArrowRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+            Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         };
 
-        // --- Sub-Components (DEFINED OUTSIDE TO AVOID RERENDER BUG) ---
+        // --- Components ---
+        const RouletteWheel = ({ items, spin, onEnd }) => {
+            const [offset, setOffset] = useState(0);
+            const itemH = 60;
+            const ref = useRef();
+
+            useEffect(() => {
+                if (spin) {
+                    const extraSpins = 5 + Math.floor(Math.random() * 5);
+                    const targetIdx = Math.floor(Math.random() * items.length);
+                    const totalOffset = (extraSpins * items.length + targetIdx) * itemH;
+                    setOffset(totalOffset);
+                    setTimeout(() => onEnd(items[targetIdx]), 4000);
+                }
+            }, [spin]);
+
+            const displayItems = useMemo(() => {
+                let res = []; for (let i = 0; i < 30; i++) res = [...res, ...items]; return res;
+            }, [items]);
+
+            return (
+                <div className="roulette-container w-full">
+                    <div className="roulette-marker"></div>
+                    <motion.div
+                        initial={false}
+                        animate={{ y: -offset + 60 }}
+                        transition={{ duration: spin ? 4 : 0, ease: [0.15, 0.85, 0.35, 1] }}
+                        className="flex flex-col"
+                    >
+                        {displayItems.map((it, i) => (
+                            <div key={i} className="h-[60px] flex items-center justify-center font-bold text-lg tracking-wider text-white/80">
+                                {typeof it === 'string' ? it : it.text}
+                            </div>
+                        ))}
+                    </motion.div>
+                </div>
+            );
+        };
 
         const LandingView = ({ onStart }) => (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-screen text-center px-6">
-                <div className="relative mb-10"><div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse"></div><div className="text-[100px] leading-none mb-4">🥃</div></div>
-                <h1 className="text-6xl font-extrabold tracking-tighter mb-6 gradient-text uppercase italic leading-none text-glow">Drink <br /><span className="text-primary">&</span> Play</h1>
-                <p className="text-lg text-gray-400 max-w-sm mb-12 font-light">A experiência definitiva de socialização. Elevando suas noites ao nível premium.</p>
-                <button onClick={onStart} className="btn-premium flex items-center gap-4 px-10 py-5 rounded-full text-xl font-bold uppercase tracking-widest text-white transition-all shadow-2xl overflow-hidden relative group">
-                    <span>Iniciar Experiência</span><Icons.ArrowRight />
-                </button>
-            </motion.div>
-        );
-
-        const SetupView = ({ players, playerName, setPlayerName, onAdd, onRemove, onStart }) => (
-            <div className="max-w-xl mx-auto pt-20 px-8 flex flex-col min-h-screen">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <h2 className="text-4xl font-extrabold mb-2 italic uppercase">Esquadrão</h2>
-                    <p className="text-gray-400 mb-10">Quem vai sobreviver à noite?</p>
-                </motion.div>
-
-                <div className="glass p-8 mb-6">
-                    <form onSubmit={(e) => { e.preventDefault(); onAdd(); }} className="relative group mb-8">
-                        <input type="text" spellCheck="false" value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="INSIRA O NOME..." className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-xl font-bold tracking-widest outline-none transition-all focus:border-primary/50 focus:bg-white/10" />
-                        <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center hover:bg-primary transition-all text-white"><Icons.Plus /></button>
-                    </form>
-
-                    <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scroll mb-4">
-                        <AnimatePresence>
-                            {players.map((p, i) => (
-                                <motion.div key={p.name} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }} className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-2xl hover:bg-white/[0.08] transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-white shadow-lg">{i + 1}</div>
-                                        <span className="text-xl font-bold tracking-wider">{p.name}</span>
-                                    </div>
-                                    <button onClick={() => onRemove(p.name)} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-red-500 transition-all"><Icons.Trash /></button>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        {players.length === 0 && <div className="text-center py-20 text-gray-600 italic tracking-widest uppercase text-sm">Nenhum jogador na roda ainda</div>}
-                    </div>
-                </div>
-
-                <div className="mt-auto pb-10">
-                    <button onClick={onStart} disabled={players.length < 2} className="w-full btn-premium py-6 rounded-3xl text-2xl font-black uppercase tracking-[0.2em] shadow-2xl disabled:opacity-20 disabled:grayscale transition-all">
-                        ELEVAR AO NÍVEL PRO
-                    </button>
-                </div>
+            <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
+                <div className="text-[100px] mb-4">🥃</div>
+                <h1 className="text-6xl font-extrabold gradient-text italic leading-none text-glow uppercase">Drink <br /><span className="text-primary">&</span> Play</h1>
+                <p className="text-gray-400 my-10 max-w-xs font-light">A experiência social definitiva. Pronto para o próximo nível?</p>
+                <button onClick={onStart} className="btn-premium px-12 py-5 rounded-full text-xl font-bold uppercase tracking-widest text-white">Entrar na Roda</button>
             </div>
         );
 
-        const GameView = ({ players, playerActive, currentCard, drawing, onDraw, history, onExit }) => (
-            <div className="max-w-xl mx-auto pt-10 px-8 flex flex-col min-h-screen">
-                <div className="flex justify-between items-center mb-12">
-                    <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div><span className="text-xs font-bold uppercase tracking-widest text-gray-400">Live - Session</span></div>
-                    <button onClick={onExit} className="text-xs font-bold uppercase tracking-widest text-white/40 hover:text-primary transition-all">Sair</button>
-                </div>
+        const MenuView = ({ onSelectMode }) => (
+            <div className="max-w-md mx-auto pt-20 px-8 flex flex-col gap-6">
+                <h2 className="text-3xl font-black italic uppercase mb-4">Escolha Modo</h2>
+                <button onClick={() => onSelectMode('cards')} className="glass p-8 text-left hover:bg-white/5 transition-all group">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🃏</div>
+                    <h3 className="text-2xl font-bold text-primary italic uppercase mb-2">Cartas Premium</h3>
+                    <p className="text-gray-500 text-sm">Desafios clássicos em formato de deck.</p>
+                </button>
+                <button onClick={() => onSelectMode('roulette')} className="glass p-8 text-left hover:bg-white/5 transition-all group">
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎡</div>
+                    <h3 className="text-2xl font-bold text-secondary italic uppercase mb-2">Roleta Extreme</h3>
+                    <p className="text-gray-500 text-sm">Sorteie quem bebe e o quê em tempo real.</p>
+                </button>
+            </div>
+        );
 
-                <div className="text-center mb-10">
-                    <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-2">Momento do Brinde</p>
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter text-glow">{players[playerActive]?.name}</h2>
-                </div>
-
-                <div className="relative h-[380px] mb-12 cursor-pointer" onClick={onDraw}>
-                    {drawing && <div className="absolute inset-0 bg-white/20 rounded-[40px] blur-[10px] animate-pulse z-20"></div>}
-                    <div className={`w-full h-full glass rounded-[40px] border-2 border-dashed border-white/20 flex flex-col items-center justify-center transition-all duration-500 ${currentCard ? 'opacity-0 scale-90 translate-y-10' : 'opacity-100 scale-100'}`}>
-                        <div className="text-8xl mb-6">🃏</div><p className="text-xl font-bold tracking-widest text-gray-500 uppercase italic">Toque para Desafiar</p>
+        const SetupView = ({ players, onAdd, onRemove, onStart, name, setName }) => (
+            <div className="max-w-md mx-auto pt-20 px-8 flex flex-col min-h-screen">
+                <h2 className="text-4xl font-black italic uppercase mb-2">Esquadrão</h2>
+                <p className="text-gray-400 mb-10">Quem está na roda hoje?</p>
+                <div className="glass p-6 mb-10">
+                    <div className="flex gap-2 mb-6">
+                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary" />
+                        <button onClick={onAdd} className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center"><Icons.Plus /></button>
                     </div>
-                    {currentCard && (
-                        <motion.div initial={{ opacity: 0, scale: 0.8, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} className={`absolute inset-0 rounded-[40px] p-8 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl border border-white/20 ${THEMES[currentCard.type] || 'from-gray-800 to-gray-900'}`}>
-                            <div className="absolute top-6 left-6 text-white/20 font-black italic uppercase text-xs tracking-widest">Desafio</div>
-                            <span className="text-white/60 font-black uppercase text-sm tracking-[0.3em] mb-6">{currentCard.for}</span>
-                            <h3 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-8">{currentCard.text}</h3>
-                            <div className="p-4 bg-white/20 rounded-2xl flex gap-2">{Array(currentCard.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-2xl">{s}</span>)}</div>
-                        </motion.div>
-                    )}
-                </div>
-
-                <div className="glass p-6 mb-8 relative overflow-hidden">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-gray-500 mb-6 flex justify-between items-center"><span>Resiliência</span><Icons.Sparkles /></h4>
-                    <div className="space-y-4">
-                        {players.map((p, i) => (
-                            <div key={p.name} className={`flex items-center justify-between transition-all ${i === (playerActive === 0 ? players.length - 1 : playerActive - 1) ? 'scale-105' : 'opacity-50'}`}>
-                                <span className="text-lg font-bold italic">{p.name}</span>
-                                <div className="flex items-center gap-4"><div className="h-1.5 w-24 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${Math.min(p.shots * 15, 100)}%` }}></div></div><span className="font-mono text-xl font-bold text-primary">{p.shots}</span></div>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2">
+                        {players.map(p => (
+                            <div key={p.name} className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+                                <span className="font-bold">{p.name}</span>
+                                <button onClick={() => onRemove(p.name)} className="text-gray-500 hover:text-red-500"><Icons.Trash /></button>
                             </div>
                         ))}
                     </div>
                 </div>
-
-                <div className="mt-auto pb-10">
-                    <button onClick={onDraw} className="w-full btn-premium py-6 rounded-3xl text-2xl font-black uppercase tracking-[0.2em] shadow-2xl relative overflow-hidden">
-                        {currentCard ? 'Próxima' : 'Jogar'}
-                    </button>
-                </div>
+                <button onClick={onStart} disabled={players.length < 2} className="btn-premium w-full py-5 rounded-3xl text-xl font-black uppercase tracking-widest disabled:opacity-20">Confirmar Time</button>
             </div>
         );
 
-        // --- Main App ---
+        const CardsView = ({ players, active, onDraw, card, drawing, onExit }) => (
+            <div className="max-w-md mx-auto pt-10 px-8 flex flex-col min-h-screen">
+                <div className="flex justify-between items-center mb-10">
+                    <span className="text-xs font-bold text-primary uppercase tracking-widest italic">Modo Cartas</span>
+                    <button onClick={onExit} className="text-xs opacity-40">Sair</button>
+                </div>
+                <div className="text-center mb-8">
+                    <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Vez de</p>
+                    <h2 className="text-3xl font-black italic uppercase text-glow">{players[active]?.name}</h2>
+                </div>
+                <div className="relative h-[350px] mb-10 cursor-pointer" onClick={onDraw}>
+                    <div className={`w-full h-full glass rounded-[40px] border-2 border-dashed border-white/10 flex flex-col items-center justify-center transition-all ${card ? 'opacity-0 scale-90' : 'opacity-100'}`}>
+                        <div className="text-7xl mb-4">🃏</div><p className="font-bold text-gray-500 italic uppercase">Puxar Carta</p>
+                    </div>
+                    <AnimatePresence>
+                        {card && (
+                            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className={`absolute inset-0 rounded-[40px] p-10 flex flex-col items-center justify-center text-center bg-gradient-to-br shadow-2xl ${THEMES[card.type]}`}>
+                                <h3 className="text-2xl font-black text-white leading-tight uppercase italic">{card.text}</h3>
+                                <div className="mt-8 flex gap-2">{Array(card.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-2xl">{s}</span>)}</div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+                <button onClick={onDraw} className="btn-premium w-full py-5 rounded-3xl text-xl font-black uppercase">{card ? 'Próxima' : 'Jogar'}</button>
+            </div>
+        );
+
+        const RouletteView = ({ players, onExit, onFinish }) => {
+            const [spinning, setSpinning] = useState(false);
+            const [pResult, setPResult] = useState(null);
+            const [cResult, setCResult] = useState(null);
+            const [done, setDone] = useState(false);
+
+            const handleSpin = () => { if (spinning) return; setSpinning(true); setDone(false); setPResult(null); setCResult(null); };
+            const checkDone = () => { if (pResult && cResult) { setSpinning(false); setDone(true); onFinish(pResult, cResult); } };
+
+            return (
+                <div className="max-w-md mx-auto pt-10 px-8 flex flex-col min-h-screen">
+                    <div className="flex justify-between items-center mb-10">
+                        <span className="text-xs font-bold text-secondary uppercase tracking-widest italic">Roleta Extreme</span>
+                        <button onClick={onExit} className="text-xs opacity-40">Sair</button>
+                    </div>
+                    <div className="flex flex-col gap-4 mb-10">
+                        <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => { setPResult(r); }} />
+                        <div className="text-center font-black text-2xl italic text-primary">VAI BEBER...</div>
+                        <RouletteWheel items={ROULETTE_CHALLENGES} spin={spinning} onEnd={r => { setCResult(r); }} />
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                        <AnimatePresence>
+                            {(pResult && cResult) && (
+                                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center glass p-6 w-full mb-6">
+                                    <h4 className="text-xl font-black text-white italic uppercase">{pResult}</h4>
+                                    <p className="text-primary font-bold text-2xl">{cResult.text}</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                    <button onClick={handleSpin} disabled={spinning} className="btn-premium w-full py-5 rounded-3xl text-xl font-black uppercase mb-10 disabled:opacity-50">GIRAR SORTE</button>
+                    {pResult && cResult && checkDone()}
+                </div>
+            );
+        };
+
         function App() {
             const [view, setView] = useState('landing');
             const [players, setPlayers] = useState([]);
             const [playerName, setPlayerName] = useState('');
             const [gameId, setGameId] = useState(null);
-            const [currentCard, setCurrentCard] = useState(null);
-            const [playerActive, setPlayerActive] = useState(0);
-            const [drawing, setDrawing] = useState(false);
+            const [active, setActive] = useState(0);
+            const [card, setCard] = useState(null);
             const [history, setHistory] = useState([]);
 
             const handleAdd = () => {
-                const name = playerName.trim();
-                if (!name || players.some(p => p.name === name)) return;
-                setPlayers([...players, { name, shots: 0 }]);
-                setPlayerName('');
+                const n = playerName.trim(); if (!n || players.some(p => p.name === n)) return;
+                setPlayers([...players, { name: n, shots: 0 }]); setPlayerName('');
             };
 
             const handleStart = async () => {
-                if (players.length < 2) return;
-                try {
-                    const { data } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single();
-                    if (data) setGameId(data.id);
-                } catch (e) { console.error(e); }
-                setView('game');
+                const { data } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single();
+                if (data) setGameId(data.id); setView('menu');
             };
 
-            const handleDraw = () => {
-                if (drawing) return;
-                setDrawing(true);
-                setTimeout(() => {
-                    const card = CARDS[Math.floor(Math.random() * CARDS.length)];
-                    const player = players[playerActive].name;
-                    setCurrentCard({ ...card, for: player });
-                    const newPlayers = [...players];
-                    if (card.type === 'everyone') newPlayers.forEach(p => p.shots++);
-                    else if (card.bonus > 0) newPlayers[playerActive].shots += card.bonus;
-                    setPlayers(newPlayers);
-                    setHistory([{ p: player, c: card.text }, ...history].slice(0, 10));
-                    setPlayerActive((playerActive + 1) % players.length);
-                    setDrawing(false);
-                    if (gameId) supabase.from('game_sessions').update({ players_data: newPlayers }).eq('id', gameId).then();
-                }, 500);
+            const handleCardDraw = () => {
+                const c = CARDS[Math.floor(Math.random() * CARDS.length)];
+                setCard({ ...c, for: players[active].name });
+                const newP = [...players];
+                if (c.type === 'everyone') newP.forEach(p => p.shots++);
+                else if (c.bonus > 0) newP[active].shots += c.bonus;
+                setPlayers(newP); setActive((active + 1) % players.length);
+                if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then();
+            };
+
+            const handleRouletteFinish = (name, chal) => {
+                const newP = [...players]; const pIdx = newP.findIndex(x => x.name === name);
+                if (chal.bonus > 0) newP[pIdx].shots += chal.bonus;
+                setPlayers(newP);
+                if (gameId) supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).then();
             };
 
             return (
-                <main className="relative min-h-screen">
+                <main>
                     <AnimatePresence mode="wait">
-                        {view === 'landing' && <LandingView key="l" onStart={() => setView('setup')} />}
-                        {view === 'setup' && (
-                            <SetupView
-                                key="s"
-                                players={players}
-                                playerName={playerName}
-                                setPlayerName={setPlayerName}
-                                onAdd={handleAdd}
-                                onRemove={(n) => setPlayers(players.filter(p => p.name !== n))}
-                                onStart={handleStart}
-                            />
-                        )}
-                        {view === 'game' && <GameView key="g" players={players} playerActive={playerActive} currentCard={currentCard} drawing={drawing} onDraw={handleDraw} history={history} onExit={() => setView('setup')} />}
+                        {view === 'landing' && <LandingView onStart={() => setView('setup')} />}
+                        {view === 'setup' && <SetupView players={players} name={playerName} setName={setPlayerName} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
+                        {view === 'menu' && <MenuView onSelectMode={m => setView(m)} />}
+                        {view === 'cards' && <CardsView players={players} active={active} card={card} onDraw={handleCardDraw} onExit={() => setView('menu')} />}
+                        {view === 'roulette' && <RouletteView players={players} onExit={() => setView('menu')} onFinish={handleRouletteFinish} />}
                     </AnimatePresence>
                 </main>
             );
         }
-
-        const rootCtx = ReactDOM.createRoot(document.getElementById('root'));
-        rootCtx.render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 
