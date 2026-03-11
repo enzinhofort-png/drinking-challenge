@@ -272,7 +272,7 @@
         const RouletteWheel = ({ items, spin, onEnd }) => {
             const [offset, setOffset] = useState(0);
             const [isSpinning, setIsSpinning] = useState(false);
-            const itemH = 80; // Taller for casino feel
+            const itemH = 64; // Slightly shorter for better fit
             
             useEffect(() => {
                 if (spin) {
@@ -305,44 +305,42 @@
             }, [items]);
 
             return (
-                <div className="relative w-full max-w-xl mx-auto">
+                <div className="relative w-full max-w-lg mx-auto">
                     {/* Casino Slot Frame */}
-                    <div className="absolute -inset-4 border-[6px] border-yellow-500 rounded-[40px] shadow-[0_0_30px_rgba(234,179,8,0.4)] bg-gradient-to-b from-yellow-600 via-yellow-400 to-yellow-800 p-1">
-                        <div className="absolute inset-0 flex flex-wrap gap-4 p-2 pointer-events-none opacity-50">
-                            {Array(20).fill(0).map((_, i) => (
-                                <div key={i} className={`w-2 h-2 rounded-full bg-white shadow-[0_0_8px_white] ${isSpinning ? 'animate-pulse' : ''}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
+                    <div className="absolute -inset-3 border-[4px] border-yellow-500 rounded-[32px] shadow-[0_0_20px_rgba(234,179,8,0.3)] bg-gradient-to-b from-yellow-600 via-yellow-400 to-yellow-800 p-0.5">
+                        <div className="absolute inset-0 flex flex-wrap gap-3 p-1 pointer-events-none opacity-40">
+                            {Array(15).fill(0).map((_, i) => (
+                                <div key={i} className={`w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_5px_white] ${isSpinning ? 'animate-pulse' : ''}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
                             ))}
                         </div>
                     </div>
                     
-                    <div className="roulette-container w-full h-[280px] bg-black/90 rounded-[32px] overflow-hidden relative border-4 border-black shadow-inner">
+                    <div className="roulette-container w-full h-[200px] bg-black/95 rounded-[24px] overflow-hidden relative border-4 border-black/50 shadow-inner">
                         {/* Glass Overlay for depth */}
                         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-20 pointer-events-none"></div>
-                        <div className="absolute inset-x-0 h-1 top-1/4 bg-white/5 z-20"></div>
-                        <div className="absolute inset-x-0 h-1 bottom-1/4 bg-white/5 z-20"></div>
 
                         {/* Gold Marker */}
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[80px] border-y-4 border-yellow-500/50 bg-yellow-500/10 z-10 pointer-events-none box-content">
-                             <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-500 rotate-45 border-4 border-black z-30"></div>
-                             <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-500 rotate-45 border-4 border-black z-30"></div>
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[64px] border-y-2 border-yellow-500/30 bg-yellow-500/5 z-10 pointer-events-none box-content">
+                             <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-500 rotate-45 border-2 border-black z-30"></div>
+                             <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-500 rotate-45 border-2 border-black z-30"></div>
                         </div>
 
                         <motion.div 
                             initial={false} 
-                            animate={{ y: -offset + 100 }} 
+                            animate={{ y: -offset + 68 }} 
                             transition={{ duration: isSpinning ? 4 : 0, ease: [0.12, 0.8, 0.3, 1] }} 
                             className="flex flex-col"
                         >
                             {displayItems.map((it, i) => {
                                 const isString = typeof it === 'string';
                                 const parts = isString ? [it] : it.text.split(' ');
-                                const icon = !isString ? parts[0] : '💥';
+                                const icon = !isString ? parts[0] : '🍺';
                                 const text = !isString ? parts.slice(1).join(' ') : it;
                                 return (
-                                    <div key={i} className="h-[80px] flex items-center justify-center px-4 w-full">
-                                        <div className={`flex items-center justify-center gap-4 px-8 h-[60px] rounded-2xl w-[90%] transition-all duration-500 ${!isString ? 'bg-gradient-to-r from-gray-900 to-black border-2 border-primary/30 shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'text-yellow-500'}`}>
-                                            <span className="text-3xl drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] transform group-hover:scale-110 transition-transform">{icon}</span>
-                                            <span className={`font-black uppercase tracking-[0.2em] italic truncate drop-shadow-lg ${isString ? 'text-2xl md:text-3xl text-yellow-500' : 'text-base md:text-xl text-white'}`}>{text}</span>
+                                    <div key={i} className="h-[64px] flex items-center justify-center px-4 w-full">
+                                        <div className={`flex items-center justify-center gap-3 px-6 h-[50px] rounded-xl w-[92%] transition-all duration-500 ${!isString ? 'bg-gradient-to-r from-gray-900 to-black border border-primary/20 shadow-[0_0_15px_rgba(255,0,110,0.15)]' : 'text-yellow-500'}`}>
+                                            <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{icon}</span>
+                                            <span className={`font-black uppercase tracking-[0.1em] italic truncate drop-shadow-lg ${isString ? 'text-xl md:text-2xl text-yellow-500' : 'text-sm md:text-base text-white'}`}>{text}</span>
                                         </div>
                                     </div>
                                 );
@@ -718,9 +716,9 @@
                     </div>
                     <ShotTrack players={players} speedEnabled={speedEnabled} startTime={startTime} />
 
-                    <div className="flex flex-col gap-4 md:gap-8 mb-6 mt-2 md:mt-4 max-w-2xl mx-auto w-full">
+                    <div className="flex flex-col gap-2 md:gap-4 mb-4 mt-1 md:mt-2 max-w-2xl mx-auto w-full">
                         <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => setPResult(r)} />
-                        <div className="text-center font-black text-2xl md:text-3xl italic text-primary uppercase tracking-tighter drop-shadow-lg scale-110 my-1 py-1 px-4 bg-primary/10 rounded-full w-fit mx-auto border border-primary/20">VAI BEBER...</div>
+                        <div className="text-center font-black text-xl md:text-2xl italic text-primary uppercase tracking-tighter drop-shadow-lg scale-105 my-0.5 py-0.5 px-4 bg-primary/10 rounded-full w-fit mx-auto border border-primary/20">VAI BEBER...</div>
                         <RouletteWheel items={deck} spin={spinning} onEnd={r => setCResult(r)} />
                     </div>
 
