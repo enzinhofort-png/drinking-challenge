@@ -215,16 +215,35 @@
             Back: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7-7l-7 7 7 7" /></svg>
         };
 
+        const calculateBAC = (shots, weight, gender, startTime) => {
+            if (!weight || !gender || !startTime) return null;
+            const hours = (Date.now() - startTime) / 3600000;
+            const factor = gender === 'M' ? 0.68 : 0.55;
+            // 1 shot =~ 14g de álcool
+            const bac = ((shots * 14) / (weight * factor)) - (hours * 0.15);
+            return Math.max(0, bac).toFixed(2);
+        };
+
         // --- Shared Components ---
         const GlassCard = ({ children, className = "" }) => <div className={`glass border-white/5 p-6 sm:p-8 ${className}`}>{children}</div>;
-        const ShotTrack = ({ players }) => (
+        const ShotTrack = ({ players, speedEnabled, startTime }) => (
             <div className="flex gap-2 overflow-x-auto custom-scroll pb-2 mb-6">
-                {players.map(p => (
-                    <div key={p.name} className="flex-shrink-0 glass px-4 py-2 flex items-center gap-2 border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{p.name}</span>
-                        <span className="text-primary font-black">{p.shots}</span>
-                    </div>
-                ))}
+                {players.map(p => {
+                    const bac = speedEnabled ? calculateBAC(p.shots, p.weight, p.gender, startTime) : null;
+                    return (
+                        <div key={p.name} className="flex-shrink-0 glass px-4 py-2 flex flex-col items-center gap-1 border-white/10">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40 leading-none">{p.name}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-primary font-black leading-none">{p.shots} <span className="text-[10px] text-white/30">shots</span></span>
+                                {bac !== null && (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${bac > 1.5 ? 'bg-red-500/20 text-red-400' : bac > 0.8 ? 'bg-orange-500/20 text-orange-400' : bac > 0.3 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}>
+                                        {bac}g/L
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         );
 
@@ -309,19 +328,48 @@
             </div>
         );
 
-        const SetupView = ({ players, onAdd, onRemove, onStart, name, setName }) => (
+        const SetupView = ({ players, onAdd, onRemove, onStart, name, setName, speedEnabled, setSpeedEnabled, weight, setWeight, gender, setGender }) => (
             <div className="max-w-md mx-auto pt-16 px-6 flex flex-col min-h-screen">
                 <h2 className="text-4xl font-black italic uppercase mb-2">Esquadrão</h2>
-                <p className="text-gray-600 uppercase tracking-widest text-[10px] font-bold mb-10">Quem encara o desafio?</p>
-                <GlassCard className="mb-10">
-                    <div className="flex gap-2 mb-6">
-                        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-primary transition-all font-bold tracking-widest min-w-0" />
-                        <button onClick={onAdd} className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg"><Icons.Plus /></button>
+                <p className="text-gray-600 uppercase tracking-widest text-[10px] font-bold mb-6">Quem encara o desafio?</p>
+
+                <div className="flex items-center justify-between glass p-4 mb-6 cursor-pointer" onClick={() => setSpeedEnabled(!speedEnabled)}>
+                    <div className="flex items-center gap-3">
+                        <div className="text-2xl">🏎️</div>
+                        <div>
+                            <p className="text-xs font-black uppercase text-white">Velocímetro de Embriaguez</p>
+                            <p className="text-[9px] text-gray-500 font-bold tracking-widest uppercase">Calcula Pulo Morte / Álcool no sangue</p>
+                        </div>
                     </div>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2">
+                    <div className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${speedEnabled ? 'bg-primary' : 'bg-white/10'}`}>
+                        <motion.div layout className="w-4 h-4 rounded-full bg-white shadow-md" style={{ marginLeft: speedEnabled ? '24px' : '0' }} />
+                    </div>
+                </div>
+
+                <GlassCard className="mb-10">
+                    <div className="flex flex-col gap-3 mb-6">
+                        <div className="flex gap-2">
+                            <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="NOME..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-primary transition-all font-bold tracking-widest min-w-0" />
+                            <button onClick={onAdd} className="w-14 h-[56px] bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg mt-auto"><Icons.Plus /></button>
+                        </div>
+                        {speedEnabled && (
+                            <div className="flex gap-2">
+                                <input type="number" placeholder="Peso (kg)" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm font-bold placeholder:text-gray-600" />
+                                <select value={gender} onChange={e => setGender(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm font-bold text-gray-400">
+                                    <option value="" disabled>Sexo</option>
+                                    <option value="M">Masc</option>
+                                    <option value="F">Fem</option>
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                    <div className="space-y-3 max-h-[250px] overflow-y-auto custom-scroll pr-2">
                         {players.map(p => (
                             <div key={p.name} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
-                                <span className="font-black tracking-widest uppercase text-[11px]">{p.name}</span>
+                                <div className="flex flex-col">
+                                    <span className="font-black tracking-widest uppercase text-[11px]">{p.name}</span>
+                                    {speedEnabled && <span className="text-[10px] text-gray-500">{p.weight}kg | {p.gender}</span>}
+                                </div>
                                 <button onClick={() => onRemove(p.name)} className="text-gray-600 hover:text-red-500"><Icons.Trash /></button>
                             </div>
                         ))}
@@ -361,13 +409,57 @@
             );
         };
 
-        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel, cardsCount }) => (
+        const DeckConfigView = ({ baseDeck, onConfirm, onBack, mode }) => {
+            const [selectedCards, setSelectedCards] = useState(baseDeck.map((_, i) => i));
+            const toggle = (i) => setSelectedCards(sel => sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i]);
+
+            return (
+                <div className="max-w-md mx-auto pt-10 px-6 flex flex-col min-h-screen pb-10">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                            <button onClick={onBack} className="w-10 h-10 glass flex items-center justify-center rounded-xl"><Icons.Back /></button>
+                            <h2 className="text-2xl font-black uppercase italic">Configurar Deck</h2>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">{mode}</span>
+                    </div>
+                    <GlassCard className="mb-6 flex-1 flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Cartas Ativas: {selectedCards.length}/{baseDeck.length}</span>
+                            <div className="flex gap-2">
+                                <button onClick={() => setSelectedCards(baseDeck.map((_, i) => i))} className="text-[9px] uppercase font-black tracking-widest text-primary hover:text-white transition-colors">Todas</button>
+                                <span className="text-gray-600">|</span>
+                                <button onClick={() => setSelectedCards([])} className="text-[9px] uppercase font-black tracking-widest text-primary hover:text-white transition-colors">Nenhuma</button>
+                            </div>
+                        </div>
+                        <div className="space-y-2 max-h-[50vh] overflow-y-auto custom-scroll pr-2 flex-1">
+                            {baseDeck.map((it, i) => {
+                                const active = selectedCards.includes(i);
+                                return (
+                                    <div key={i} onClick={() => toggle(i)} className={`cursor-pointer flex justify-between items-center p-3 rounded-lg border transition-all ${active ? 'bg-white/10 border-primary/50' : 'bg-black/20 border-white/5 opacity-50 hover:opacity-80'}`}>
+                                        <div className="flex flex-col gap-1 pr-4">
+                                            <span className="text-xs font-bold leading-tight">{typeof it === 'string' ? it : it.text}</span>
+                                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{it.bonus || 0} shots • {it.type || 'roleta'}</span>
+                                        </div>
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${active ? 'bg-primary text-white' : 'bg-white/5 text-transparent border border-white/10'}`}>
+                                            <Icons.Check />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </GlassCard>
+                    <button onClick={() => onConfirm(baseDeck.filter((_, i) => selectedCards.includes(i)))} disabled={selectedCards.length === 0} className="btn-premium py-5 rounded-2xl text-xl font-black uppercase tracking-widest shadow-2xl disabled:opacity-20 w-full mt-auto">Iniciar Partida</button>
+                </div>
+            );
+        };
+
+        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel, cardsCount, speedEnabled, startTime }) => (
             <div className="max-w-md mx-auto pt-6 px-6 flex flex-col min-h-screen pb-10">
                 <div className="flex justify-between items-center mb-6">
                     <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] italic leading-none">{modeLabel}</span>
-                    <button onClick={onExit} className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white">Voltar</button>
+                    <button onClick={onExit} className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white">Sair</button>
                 </div>
-                <ShotTrack players={players} />
+                <ShotTrack players={players} speedEnabled={speedEnabled} startTime={startTime} />
                 <div className="text-center mb-8">
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Rodada {cardsCount}</p>
                     <h2 className="text-3xl font-black italic uppercase text-glow">{players[active]?.name}</h2>
@@ -389,7 +481,7 @@
             </div>
         );
 
-        const RouletteView = ({ players, onExit, onFinish, onVote }) => {
+        const RouletteView = ({ players, onExit, onFinish, onVote, deck, speedEnabled, startTime }) => {
             const [spinning, setSpinning] = useState(false);
             const [pResult, setPResult] = useState(null);
             const [cResult, setCResult] = useState(null);
@@ -398,13 +490,13 @@
                 <div className="max-w-xl mx-auto pt-8 px-6 flex flex-col min-h-screen pb-10">
                     <div className="flex justify-between items-center mb-8">
                         <span className="text-xs font-black text-secondary uppercase tracking-[0.4em] italic leading-none text-glow">ROLETA EXTREME</span>
-                        <button onClick={onExit} className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 hover:text-white transition-all">Voltar</button>
+                        <button onClick={onExit} className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50 hover:text-white transition-all">Sair</button>
                     </div>
-                    <ShotTrack players={players} />
+                    <ShotTrack players={players} speedEnabled={speedEnabled} startTime={startTime} />
                     <div className="flex flex-col gap-6 mb-10 mt-4">
                         <RouletteWheel items={players.map(p => p.name)} spin={spinning} onEnd={r => setPResult(r)} />
                         <div className="text-center font-black text-2xl italic text-primary uppercase tracking-tighter drop-shadow-md">VAI BEBER...</div>
-                        <RouletteWheel items={ROULETTE_BASE} spin={spinning} onEnd={r => setCResult(r)} />
+                        <RouletteWheel items={deck} spin={spinning} onEnd={r => setCResult(r)} />
                     </div>
                     <div className="flex-1 flex flex-col justify-center">
                         <AnimatePresence>
@@ -471,14 +563,28 @@
             const [view, setView] = useState('landing');
             const [players, setPlayers] = useState([]);
             const [name, setName] = useState('');
+            const [weight, setWeight] = useState('');
+            const [gender, setGender] = useState('');
+            const [speedEnabled, setSpeedEnabled] = useState(false);
+            const [gameStartTime, setGameStartTime] = useState(null);
+
             const [gameId, setGameId] = useState(null);
             const [active, setActive] = useState(0);
             const [card, setCard] = useState(null);
             const [customDeck, setCustomDeck] = useState([]);
+            const [activeDeck, setActiveDeck] = useState([]); // Array filtrado final
+            const [selectedModeName, setSelectedModeName] = useState(''); // cards, roulette, 18, custom
+
             const [voting, setVoting] = useState(false);
             const [itCount, setItCount] = useState(0);
 
-            const handleAdd = () => { if (name.trim() && !players.some(p => p.name === name.trim())) { setPlayers([...players, { name: name.trim(), shots: 0 }]); setName(''); } };
+            const handleAdd = () => {
+                if (name.trim() && !players.some(p => p.name === name.trim())) {
+                    if (speedEnabled && (!weight || !gender)) return; // Validar se velocímetro ativo
+                    setPlayers([...players, { name: name.trim(), shots: 0, weight, gender }]);
+                    setName(''); setWeight(''); setGender('');
+                }
+            };
             const handleStart = async () => {
                 if (players.length < 2) return;
                 try {
@@ -489,9 +595,38 @@
                 }
                 setView('menu');
             };
+
+            const handleSelectMode = (modeArgs) => {
+                if (modeArgs === 'custom-editor') {
+                    setView('custom-editor');
+                    return;
+                }
+
+                let bDeck = [];
+                if (modeArgs === 'cards') bDeck = CARDS_NORMAL;
+                else if (modeArgs === '18') bDeck = CARDS_18;
+                else if (modeArgs === 'roulette') bDeck = ROULETTE_BASE;
+                else if (modeArgs === 'custom') bDeck = customDeck;
+
+                setSelectedModeName(modeArgs);
+                setActiveDeck(bDeck);
+                if (bDeck.length > 0) {
+                    setView('deck-config');
+                }
+            };
+
+            const confirmDeck = (deck) => {
+                setActiveDeck(deck);
+                setGameStartTime(Date.now());
+                if (selectedModeName === 'roulette') {
+                    setView('roulette');
+                } else {
+                    setView(selectedModeName);
+                }
+            };
+
             const handleDraw = () => {
-                const deck = view === '18' ? CARDS_18 : (view === 'custom' ? customDeck : CARDS_NORMAL);
-                const c = deck[Math.floor(Math.random() * deck.length)];
+                const c = activeDeck[Math.floor(Math.random() * activeDeck.length)];
                 setCard(c); const newP = [...players];
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
                 else if (c.bonus > 0) newP[active].shots += c.bonus;
@@ -517,11 +652,12 @@
                 <main>
                     <AnimatePresence mode="wait">
                         {view === 'landing' && <LandingView key="l" onStart={() => setView('setup')} />}
-                        {view === 'setup' && <SetupView key="s" players={players} name={name} setName={setName} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
-                        {view === 'menu' && <MenuView key="m" onSelectMode={m => setView(m)} onCustom={() => setView('custom-editor')} />}
+                        {view === 'setup' && <SetupView key="s" players={players} name={name} setName={setName} weight={weight} setWeight={setWeight} gender={gender} setGender={setGender} speedEnabled={speedEnabled} setSpeedEnabled={setSpeedEnabled} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
+                        {view === 'menu' && <MenuView key="m" onSelectMode={m => handleSelectMode(m)} onCustom={() => handleSelectMode('custom-editor')} />}
                         {view === 'custom-editor' && <CustomCreator key="ce" deck={customDeck} onSave={d => { setCustomDeck(d); setView('menu'); }} onBack={() => setView('menu')} />}
-                        {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} />}
-                        {view === 'roulette' && <RouletteView key="r" players={players} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} />}
+                        {view === 'deck-config' && <DeckConfigView key="dc" baseDeck={activeDeck} mode={selectedModeName} onBack={() => setView('menu')} onConfirm={confirmDeck} />}
+                        {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} speedEnabled={speedEnabled} startTime={gameStartTime} />}
+                        {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} />}
                         {view === 'finish' && <StoryCard key="f" players={players} onRestart={() => { setPlayers(players.map(p => ({ ...p, shots: 0 }))); setItCount(0); setView('menu'); }} />}
                     </AnimatePresence>
                     {voting && <DemocracyVote players={players} onEnd={n => { updateShot(n, 1); setVoting(false); }} />}
