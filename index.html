@@ -383,14 +383,14 @@
                                 </div>
                                 {speedEnabled && (
                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex gap-3">
-                                        <input type="number" placeholder="Peso (kg)" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black tracking-widest placeholder:text-gray-600 transition-all text-white" />
-                                        <div className="flex-[0.8] relative">
-                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black text-gray-300 appearance-none cursor-pointer transition-all uppercase tracking-widest">
+                                        <input type="number" placeholder="Peso (kg)" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black tracking-widest placeholder:text-gray-600 transition-all text-white min-w-0" />
+                                        <div className="w-28 md:w-36 relative flex-shrink-0">
+                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl px-3 md:px-5 py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black text-gray-300 appearance-none cursor-pointer transition-all uppercase tracking-widest h-full">
                                                 <option value="" disabled className="bg-gray-900 text-gray-500">Sexo</option>
                                                 <option value="M" className="bg-gray-900 text-white font-bold py-2">Masc</option>
                                                 <option value="F" className="bg-gray-900 text-white font-bold py-2">Fem</option>
                                             </select>
-                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 text-xs">▼</div>
+                                            <div className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 text-[10px] md:text-xs">▼</div>
                                         </div>
                                     </motion.div>
                                 )}
@@ -552,9 +552,9 @@
                         <h2 className="text-4xl md:text-6xl font-black italic uppercase text-glow tracking-tighter">{players[active]?.name}</h2>
                     </div>
 
-                    <div className="relative flex-1 min-h-[400px] md:min-h-[500px] cursor-pointer mb-10 md:mb-16 group perspective-1000 w-full" onClick={onDraw}>
+                    <div className="relative w-full max-w-sm md:max-w-md mx-auto aspect-[3/4] cursor-pointer mb-10 md:mb-16 group perspective-1000" onClick={onDraw}>
                         <motion.div
-                            className="w-full h-full relative preserve-3d"
+                            className="absolute inset-0 w-full h-full preserve-3d"
                             initial={false}
                             animate={{ rotateY: isFlipped ? 0 : -180 }}
                             transition={{ type: "spring", stiffness: 80, damping: 15 }}
@@ -562,27 +562,27 @@
                             {/* Verso da Carta (O que vemos ANTES de virar) */}
                             <div className="absolute inset-0 backface-hidden glass rounded-[40px] border-2 border-white/10 group-hover:border-primary/50 flex flex-col items-center justify-center card-pattern [transform:rotateY(-180deg)] transition-colors duration-500 shadow-xl overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-black/80 to-transparent"></div>
-                                <div className="text-8xl md:text-9xl mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-500 drop-shadow-2xl relative z-10">🃏</div>
-                                <p className="font-black text-white/50 uppercase tracking-[0.4em] md:tracking-[0.6em] text-xs md:text-sm group-hover:text-primary transition-colors relative z-10">Puxar Carta</p>
-                                <div className="absolute inset-6 md:inset-8 border border-white/5 rounded-[24px] md:rounded-[32px] pointer-events-none"></div>
+                                <div className="text-8xl md:text-9xl mb-6 md:mb-8 group-hover:scale-110 transition-transform duration-500 drop-shadow-2xl relative z-10 w-full flex justify-center py-4">🃏</div>
+                                <p className="font-black text-white/50 uppercase tracking-[0.4em] text-sm group-hover:text-primary transition-colors relative z-10 text-center px-4 w-full">Puxar Carta</p>
+                                <div className="absolute inset-4 md:inset-6 border border-white/5 rounded-[24px] pointer-events-none"></div>
                             </div>
 
                             {/* Frente da Carta (O que vemos DEPOIS de virar) */}
-                            <div className={`absolute inset-0 backface-hidden rounded-[40px] p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] border-2 border-white/20 bg-gradient-to-br from-gray-900 to-black overflow-hidden`}>
+                            <div className={`absolute inset-0 backface-hidden rounded-[40px] p-6 sm:p-10 flex flex-col items-center justify-center text-center shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] border-2 border-white/20 bg-gradient-to-br from-gray-900 to-black overflow-hidden`}>
                                 {displayCard && (
                                     <div className={`absolute inset-0 opacity-90 mix-blend-color bg-gradient-to-br ${THEMES[displayCard.type] || 'from-gray-800 to-black'}`}></div>
                                 )}
-                                <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
+                                <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-4">
                                     {displayCard && (
                                         <>
-                                            <h3 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight uppercase italic drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] px-4">{displayCard.text}</h3>
-                                            <div className="mt-12 sm:mt-16 sm:p-8 bg-black/40 backdrop-blur-xl rounded-3xl flex gap-4 shadow-inner border border-white/15 scale-75 sm:scale-100 flex-wrap justify-center">
-                                                {Array(displayCard.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-5xl md:text-6xl drop-shadow-2xl animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>{s}</span>)}
+                                            <h3 className="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight uppercase italic drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] px-2">{displayCard.text}</h3>
+                                            <div className="mt-8 sm:mt-12 bg-black/40 backdrop-blur-xl rounded-3xl p-4 sm:p-6 flex gap-3 shadow-inner border border-white/15 scale-90 sm:scale-100 flex-wrap justify-center w-full max-w-[80%] mx-auto">
+                                                {Array(displayCard.bonus || 1).fill('🥃').map((s, i) => <span key={i} className="text-4xl md:text-5xl drop-shadow-2xl animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>{s}</span>)}
                                             </div>
                                         </>
                                     )}
                                 </div>
-                                <div className="absolute inset-6 md:inset-8 border-2 border-white/10 rounded-[24px] md:rounded-[32px] pointer-events-none z-20"></div>
+                                <div className="absolute inset-4 md:inset-6 border-2 border-white/10 rounded-[24px] pointer-events-none z-20"></div>
                             </div>
                         </motion.div>
                     </div>
