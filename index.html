@@ -278,7 +278,10 @@
                     const targetIdx = Math.floor(Math.random() * items.length);
                     const totalOffset = (extraSpins * items.length + targetIdx) * itemH;
                     setOffset(totalOffset);
-                    const timer = setTimeout(() => onEnd(items[targetIdx]), 4000);
+                    const timer = setTimeout(() => {
+                        onEnd(items[targetIdx]);
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    }, 4000);
                     return () => clearTimeout(timer);
                 }
             }, [spin]);
@@ -307,11 +310,21 @@
         };
 
         const InfoModal = ({ title, desc, onClose }) => (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={onClose}>
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full glass p-8 border-primary/30 text-center rounded-[32px] relative shadow-2xl" onClick={e => e.stopPropagation()}>
-                    <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"><Icons.Back /></button>
-                    <h3 className="text-3xl font-black italic uppercase text-primary mb-4 text-glow">{title}</h3>
-                    <p className="text-gray-300 font-medium leading-relaxed">{desc}</p>
+            <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md" onClick={onClose}>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.9 }} 
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="max-w-sm w-full glass p-10 border-primary/40 text-center rounded-[40px] relative shadow-[0_0_50px_rgba(255,0,110,0.2)]" 
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-primary rounded-full flex items-center justify-center text-4xl shadow-xl border-4 border-bg">ℹ️</div>
+                    <button onClick={onClose} className="absolute top-6 right-6 text-white/30 hover:text-white transition-colors">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <h3 className="text-4xl font-black italic uppercase text-white mb-6 mt-4 tracking-tighter drop-shadow-lg">{title}</h3>
+                    <div className="h-1 w-12 bg-primary mx-auto mb-6 rounded-full"></div>
+                    <p className="text-gray-400 font-bold text-sm leading-relaxed uppercase tracking-widest">{desc}</p>
                 </motion.div>
             </div>
         );
@@ -402,19 +415,19 @@
                         <GlassCard className="!rounded-[32px] !p-5 md:!p-8">
                             <div className="flex flex-col gap-3 mb-2">
                                 <div className="flex gap-2 md:gap-3">
-                                    <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="JOGADOR..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-4 py-3 md:px-5 md:py-4 outline-none focus:border-primary focus:bg-white/5 transition-all font-black tracking-wider min-w-0 text-sm md:text-base placeholder:text-gray-600" />
-                                    <button onClick={onAdd} className="w-14 md:w-16 h-12 md:h-[60px] bg-primary rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg mt-auto hover:bg-pink-600 transition-colors"><Icons.Plus /></button>
+                                    <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="JOGADOR..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-4 py-3.5 md:px-5 md:py-4 outline-none focus:border-primary focus:bg-white/5 transition-all font-black tracking-tight md:tracking-wider min-w-0 text-sm md:text-base placeholder:text-gray-600" />
+                                    <button onClick={onAdd} className="w-12 md:w-16 h-12 md:h-[60px] bg-primary rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg mt-auto hover:bg-pink-600 transition-colors"><Icons.Plus /></button>
                                 </div>
                                 {speedEnabled && (
                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex gap-2 md:gap-3">
-                                        <input type="number" placeholder="Peso (kg)" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-4 py-3 md:px-5 md:py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black tracking-wider placeholder:text-gray-600 transition-all text-white min-w-0" />
+                                        <input type="number" placeholder="PESO (KG)" value={weight} onChange={e => setWeight(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-4 py-3.5 md:px-5 md:py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black tracking-tight md:tracking-wider placeholder:text-gray-600 transition-all text-white min-w-0" />
                                         <div className="w-24 md:w-36 relative flex-shrink-0">
-                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl px-2 md:px-5 py-3 md:py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black text-gray-300 appearance-none cursor-pointer transition-all uppercase tracking-widest h-full">
-                                                <option value="" disabled className="bg-gray-900 text-gray-500">Sexo</option>
-                                                <option value="M" className="bg-gray-900 text-white font-bold py-2">Masc</option>
-                                                <option value="F" className="bg-gray-900 text-white font-bold py-2">Fem</option>
+                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-2xl px-2 md:px-5 py-3.5 md:py-4 outline-none focus:border-primary focus:bg-white/5 text-sm md:text-base font-black text-gray-300 appearance-none cursor-pointer transition-all uppercase tracking-tight md:tracking-widest h-full">
+                                                <option value="" disabled className="bg-gray-900 text-gray-500">SEXO</option>
+                                                <option value="M" className="bg-gray-900 text-white font-bold py-2">MASC</option>
+                                                <option value="F" className="bg-gray-900 text-white font-bold py-2">FEM</option>
                                             </select>
-                                            <div className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 text-[9px] md:text-xs">▼</div>
+                                            <div className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 text-[8px] md:text-xs">▼</div>
                                         </div>
                                     </motion.div>
                                 )}
@@ -772,6 +785,7 @@
             const handleDraw = () => {
                 const c = activeDeck[Math.floor(Math.random() * activeDeck.length)];
                 setCard(c); const newP = [...players];
+                if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
                 else if (c.bonus > 0) newP[active].shots += c.bonus;
                 setPlayers(newP); setActive((active + 1) % players.length); setItCount(itCount + 1);
