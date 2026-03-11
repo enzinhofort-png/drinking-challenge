@@ -185,6 +185,7 @@
         const SUPABASE_URL = 'https://rzgoaeyqkpgdwhuozdkf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Z29hZXlxa3BnZHdodW96ZGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyOTI2NTcsImV4cCI6MjA4MDg2ODY1N30.VtpQYkKJwIxZmtFTnfU9QxJMrnsNLEy5LjOUaZtQktA';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const ENABLE_SUPABASE = false; // Disabled to prevent 404 console errors since table 'game_sessions' is missing
 
         // --- Constants ---
         const CARDS_NORMAL = [
@@ -460,9 +461,18 @@
             );
         };
 
-        const DeckConfigView = ({ baseDeck, onConfirm, onBack, mode }) => {
+        const DeckConfigView = ({ baseDeck, onConfirm, onBack, mode, onAddCard }) => {
             const [selectedCards, setSelectedCards] = useState(baseDeck.map((_, i) => i));
+            const [newCardText, setNewCardText] = useState('');
             const toggle = (i) => setSelectedCards(sel => sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i]);
+
+            const handleAddCustom = () => {
+                if (newCardText.trim()) {
+                    onAddCard({ text: newCardText.trim(), type: 'challenge', bonus: 1 });
+                    setNewCardText('');
+                    setSelectedCards([...selectedCards, baseDeck.length]);
+                }
+            };
 
             return (
                 <div className="max-w-4xl mx-auto pt-10 md:pt-16 px-6 flex flex-col min-h-[90vh] pb-10">
@@ -485,6 +495,11 @@
                                 <button onClick={() => setSelectedCards(baseDeck.map((_, i) => i))} className="glass py-2 md:py-3 px-5 md:px-6 rounded-xl hover:bg-white/10 text-[10px] md:text-xs uppercase font-black tracking-widest text-white transition-colors flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div> Tudo</button>
                                 <button onClick={() => setSelectedCards([])} className="glass py-2 md:py-3 px-5 md:px-6 rounded-xl hover:bg-white/10 text-[10px] md:text-xs uppercase font-black tracking-widest text-gray-500 transition-colors flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500/50"></div> Limpar</button>
                             </div>
+                        </div>
+
+                        <div className="flex gap-2 mb-6">
+                            <input value={newCardText} onChange={e => setNewCardText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCustom()} placeholder="CRIE SEU PRÓPRIO DESAFIO..." className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-5 py-3 outline-none focus:border-primary text-sm font-bold tracking-widest placeholder:text-gray-600 transition-all text-white" />
+                            <button onClick={handleAddCustom} className="w-14 h-[46px] bg-primary rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg hover:bg-pink-600 transition-colors"><Icons.Plus /></button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[55vh] md:max-h-[50vh] overflow-y-auto custom-scroll pr-4 md:pr-6 flex-1 -mr-2 md:-mr-4">
@@ -689,11 +704,13 @@
             };
             const handleStart = async () => {
                 if (players.length < 2) return;
-                try {
-                    const { data, error } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single();
-                    if (!error && data) setGameId(data.id);
-                } catch (e) {
-                    console.info("Supabase table not found or not accessible. Continuing locally.");
+                if (ENABLE_SUPABASE) {
+                    try {
+                        const { data, error } = await supabase.from('game_sessions').insert([{ players_data: players, status: 'playing' }]).select().single();
+                        if (!error && data) setGameId(data.id);
+                    } catch (e) {
+                        console.info("Supabase table not found or not accessible. Continuing locally.");
+                    }
                 }
                 setView('menu');
             };
@@ -733,7 +750,7 @@
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
                 else if (c.bonus > 0) newP[active].shots += c.bonus;
                 setPlayers(newP); setActive((active + 1) % players.length); setItCount(itCount + 1);
-                if (gameId) {
+                if (ENABLE_SUPABASE && gameId) {
                     supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).catch(e => console.info("Local mode"));
                 }
                 if (itCount > 20) setView('finish');
@@ -744,7 +761,7 @@
                 if (idx !== -1) {
                     newP[idx].shots += b;
                     setPlayers(newP);
-                    if (gameId) {
+                    if (ENABLE_SUPABASE && gameId) {
                         supabase.from('game_sessions').update({ players_data: newP }).eq('id', gameId).catch(e => console.info("Local mode"));
                     }
                 }
@@ -757,7 +774,7 @@
                         {view === 'setup' && <SetupView key="s" players={players} name={name} setName={setName} weight={weight} setWeight={setWeight} gender={gender} setGender={setGender} speedEnabled={speedEnabled} setSpeedEnabled={setSpeedEnabled} onAdd={handleAdd} onRemove={n => setPlayers(players.filter(p => p.name !== n))} onStart={handleStart} />}
                         {view === 'menu' && <MenuView key="m" onSelectMode={m => handleSelectMode(m)} onCustom={() => handleSelectMode('custom-editor')} />}
                         {view === 'custom-editor' && <CustomCreator key="ce" deck={customDeck} onSave={d => { setCustomDeck(d); setView('menu'); }} onBack={() => setView('menu')} />}
-                        {view === 'deck-config' && <DeckConfigView key="dc" baseDeck={activeDeck} mode={selectedModeName} onBack={() => setView('menu')} onConfirm={confirmDeck} />}
+                        {view === 'deck-config' && <DeckConfigView key="dc" baseDeck={activeDeck} mode={selectedModeName} onAddCard={(card) => setActiveDeck([...activeDeck, card])} onBack={() => setView('menu')} onConfirm={confirmDeck} />}
                         {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} speedEnabled={speedEnabled} startTime={gameStartTime} />}
                         {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} />}
                         {view === 'finish' && <StoryCard key="f" players={players} onRestart={() => { setPlayers(players.map(p => ({ ...p, shots: 0 }))); setItCount(0); setView('menu'); }} />}
