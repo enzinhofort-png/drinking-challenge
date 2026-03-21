@@ -226,6 +226,9 @@
             { text: "🔞 Sentar no colo de alguém e conversar bem perto por 2 minutos. Ou 2 shots", type: "challenge", bonus: 2 }
         ];
 
+        const SPECIAL_A = ['nina gil', 'nina'];
+        const SPECIAL_B = ['pele', 'pl'];
+
         const ROULETTE_BASE = [
             { text: "😌 Não bebe", bonus: 0 },
             { text: "🥃 Beba 1 shot", bonus: 1 },
@@ -487,13 +490,13 @@
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Sexo/Sexualidade</label>
-                                        <div className="relative">
-                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black text-gray-400 appearance-none cursor-pointer tracking-widest uppercase">
-                                                <option value="" disabled>---</option>
-                                                <option value="M">Homem</option>
-                                                <option value="F">Mulher</option>
-                                            </select>
-                                            <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-sm">▼</div>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => setGender('M')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-widest flex items-center justify-center gap-2 ${gender === 'M' ? 'bg-primary border-primary shadow-[0_0_20px_rgba(255,0,110,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
+                                                <span>👨</span> Homem
+                                            </button>
+                                            <button onClick={() => setGender('F')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-widest flex items-center justify-center gap-2 ${gender === 'F' ? 'bg-secondary border-secondary shadow-[0_0_20px_rgba(131,56,236,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
+                                                <span>👩</span> Mulher
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -647,7 +650,7 @@
             );
         };
 
-        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel, cardsCount, speedEnabled, startTime }) => {
+        const CardsView = ({ players, active, onDraw, card, onExit, modeLabel, cardsCount, speedEnabled, startTime, autoSpin, setAutoSpin }) => {
             const [isFlipped, setIsFlipped] = useState(false);
             const [displayCard, setDisplayCard] = useState(card);
             const [target, setTarget] = useState(null);
@@ -665,18 +668,42 @@
                 }
             }, [card, displayCard]);
 
+            const hasTarget = useMemo(() => displayCard && /alguém|pessoa|alvo/i.test(displayCard.text), [displayCard]);
+
+            useEffect(() => {
+                if (hasTarget && isFlipped && autoSpin && !target && !isSpinningTarget) {
+                    const timer = setTimeout(() => setIsSpinningTarget(true), 1000);
+                    return () => clearTimeout(timer);
+                }
+            }, [hasTarget, isFlipped, autoSpin, target, isSpinningTarget]);
+
             const otherPlayersData = players.filter((_, i) => i !== active);
             const weightedTargetNames = useMemo(() => {
                 let result = [];
-                const currentGender = players[active]?.gender;
+                const current = players[active];
+                const pName = current?.name.toLowerCase();
+                
                 otherPlayersData.forEach(p => {
-                    const weight = (p.gender !== currentGender) ? 4 : 1; // 4x frequency for different gender
+                    let weight = 1;
+                    const tName = p.name.toLowerCase();
+                    
+                    // Gender boost
+                    if (p.gender !== current?.gender) weight *= 4;
+                    
+                    // Special names boost
+                    const isT_A = SPECIAL_A.includes(tName);
+                    const isT_B = SPECIAL_B.includes(tName);
+                    const isP_A = SPECIAL_A.includes(pName);
+                    const isP_B = SPECIAL_B.includes(pName);
+                    
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 12; // High probability together
+                    else if (isT_A || isT_B) weight *= 4; // High probability general
+                    
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
                 return result;
             }, [otherPlayersData, active]);
 
-            const hasTarget = useMemo(() => displayCard && /alguém|pessoa|alvo/i.test(displayCard.text), [displayCard]);
 
             return (
                 <div className="max-w-5xl mx-auto pt-8 md:pt-12 px-6 md:px-10 flex flex-col min-h-[90vh] pb-10">
@@ -726,9 +753,15 @@
 
                         {hasTarget && isFlipped && (
                             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col items-center gap-6">
-                                <div className="text-center">
-                                    <h4 className="text-xl font-black text-primary uppercase tracking-[0.3em] mb-2">Quem é o alvo?</h4>
-                                    <p className="text-gray-500 text-xs uppercase font-bold tracking-widest">Sorteie o participante</p>
+                                <div className="flex justify-between items-center w-full px-4">
+                                    <div className="text-left">
+                                        <h4 className="text-xl font-black text-primary uppercase tracking-[0.3em] mb-1">Quem é o alvo?</h4>
+                                        <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Sorteio Inteligente</p>
+                                    </div>
+                                    <button onClick={() => setAutoSpin(!autoSpin)} className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 text-[9px] font-black uppercase tracking-tighter transition-all ${autoSpin ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-white/40'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${autoSpin ? 'bg-primary animate-pulse' : 'bg-white/20'}`}></div>
+                                        {autoSpin ? 'Auto-Spin ON' : 'Auto-Spin OFF'}
+                                    </button>
                                 </div>
                                 <div className="w-full max-w-sm">
                                     <RouletteWheel items={weightedTargetNames} spin={isSpinningTarget} onEnd={r => { setTarget(r); setIsSpinningTarget(false); }} />
@@ -736,7 +769,7 @@
                                 {target && !isSpinningTarget && (
                                     <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-primary/20 border border-primary/40 px-8 py-4 rounded-2xl text-center">
                                         <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Participante Escolhido</p>
-                                        <p className="text-3xl font-black text-white italic uppercase tracking-tighter">{target}</p>
+                                        <p className="text-3xl font-black text-white italic uppercase tracking-tighter">🎯 {target}</p>
                                     </motion.div>
                                 )}
                                 <button onClick={() => { setIsSpinningTarget(true); setTarget(null); }} disabled={isSpinningTarget} className="glass px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-primary transition-all disabled:opacity-50">
@@ -751,7 +784,7 @@
             );
         };
 
-        const RouletteView = ({ players, onExit, onFinish, onVote, deck, speedEnabled, startTime }) => {
+        const RouletteView = ({ players, onExit, onFinish, onVote, deck, speedEnabled, startTime, autoSpin, setAutoSpin }) => {
             const [spinning, setSpinning] = useState(false);
             const [pResult, setPResult] = useState(null);
             const [cResult, setCResult] = useState(null);
@@ -766,12 +799,33 @@
                 } 
             }, [pResult, cResult]);
 
+            useEffect(() => {
+                if (pResult && cResult && !spinning && /alguém|pessoa|alvo/i.test(cResult.text) && autoSpin && !tResult && !tSpinning) {
+                    const timer = setTimeout(() => setTSpinning(true), 1500);
+                    return () => clearTimeout(timer);
+                }
+            }, [pResult, cResult, spinning, autoSpin, tResult, tSpinning]);
+
             const weightedTargetNames = useMemo(() => {
                 let result = [];
                 const pObj = players.find(p => p.name === pResult);
                 if (!pObj) return players.map(p => p.name).filter(n => n !== pResult);
+                const pName = pResult.toLowerCase();
+
                 players.filter(p => p.name !== pResult).forEach(p => {
-                    const weight = (p.gender !== pObj.gender) ? 4 : 1;
+                    let weight = 1;
+                    const tName = p.name.toLowerCase();
+                    
+                    if (p.gender !== pObj.gender) weight *= 4;
+                    
+                    const isT_A = SPECIAL_A.includes(tName);
+                    const isT_B = SPECIAL_B.includes(tName);
+                    const isP_A = SPECIAL_A.includes(pName);
+                    const isP_B = SPECIAL_B.includes(pName);
+
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 12;
+                    else if (isT_A || isT_B) weight *= 4;
+
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
                 return result;
@@ -805,14 +859,17 @@
 
                                     {/alguém|pessoa|alvo/i.test(cResult.text) && (
                                         <div className="relative z-10 flex flex-col items-center gap-4 bg-black/40 p-6 rounded-3xl border border-white/10">
-                                            <p className="text-xs font-black text-primary uppercase tracking-widest">Sorteie o Alvo</p>
+                                            <div className="flex justify-between items-center w-full px-2 mb-2">
+                                                <p className="text-[10px] font-black text-primary uppercase tracking-widest">Alvo Prioritário</p>
+                                                <button onClick={() => setAutoSpin(!autoSpin)} className={`px-4 py-1.5 rounded-full border-2 text-[8px] font-black uppercase transition-all ${autoSpin ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-white/40'}`}>Auto: {autoSpin ? 'ON' : 'OFF'}</button>
+                                            </div>
                                             <div className="w-full h-24 relative overflow-hidden">
                                                 <RouletteWheel items={weightedTargetNames} spin={tSpinning} onEnd={r => { setTResult(r); setTSpinning(false); onFinish(pResult, cResult); }} />
                                             </div>
                                             {tResult && !tSpinning && (
                                                 <p className="text-2xl font-black text-white uppercase italic">🎯 {tResult}</p>
                                             )}
-                                            <button onClick={() => { setTSpinning(true); setTResult(null); }} disabled={tSpinning} className="bg-primary px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Girar Alvo</button>
+                                            <button onClick={() => { setTSpinning(true); setTResult(null); }} disabled={tSpinning} className="bg-primary px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-primary/20">Girar Alvo</button>
                                         </div>
                                     )}
                                 </motion.div>
@@ -879,6 +936,7 @@
             const [weight, setWeight] = useState('');
             const [gender, setGender] = useState('');
             const [speedEnabled, setSpeedEnabled] = useState(false);
+            const [autoSpin, setAutoSpin] = useState(true);
             const [gameStartTime, setGameStartTime] = useState(null);
 
             const [gameId, setGameId] = useState(null);
@@ -974,8 +1032,8 @@
                         {view === 'menu' && <MenuView key="m" onSelectMode={m => handleSelectMode(m)} onCustom={() => handleSelectMode('custom-editor')} onInfo={(t, d) => setInfoModal({ open: true, title: t, desc: d })} />}
                         {view === 'custom-editor' && <CustomCreator key="ce" deck={customDeck} onSave={d => { setCustomDeck(d); setView('menu'); }} onBack={() => setView('menu')} />}
                         {view === 'deck-config' && <DeckConfigView key="dc" baseDeck={activeDeck} mode={selectedModeName} onAddCard={(card) => setActiveDeck([...activeDeck, card])} onBack={() => setView('menu')} onConfirm={confirmDeck} />}
-                        {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} speedEnabled={speedEnabled} startTime={gameStartTime} />}
-                        {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck.filter(c => !c.minRound || itCount >= c.minRound)} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} />}
+                        {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} speedEnabled={speedEnabled} startTime={gameStartTime} autoSpin={autoSpin} setAutoSpin={setAutoSpin} />}
+                        {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck.filter(c => !c.minRound || itCount >= c.minRound)} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} autoSpin={autoSpin} setAutoSpin={setAutoSpin} />}
                         {view === 'finish' && <StoryCard key="f" players={players} onRestart={() => { setPlayers(players.map(p => ({ ...p, shots: 0 }))); setItCount(0); setView('menu'); }} />}
                     </AnimatePresence>
                     {voting && <DemocracyVote players={players} onEnd={n => { updateShot(n, 1); setVoting(false); }} />}
