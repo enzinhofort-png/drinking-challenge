@@ -688,7 +688,7 @@
                     const tName = p.name.toLowerCase();
                     
                     // Gender boost
-                    if (p.gender !== current?.gender) weight *= 4;
+                    if (p.gender !== current?.gender) weight *= 3;
                     
                     // Special names boost
                     const isT_A = SPECIAL_A.includes(tName);
@@ -696,7 +696,7 @@
                     const isP_A = SPECIAL_A.includes(pName);
                     const isP_B = SPECIAL_B.includes(pName);
                     
-                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 4; 
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 3; 
                     
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
@@ -815,14 +815,14 @@
                     let weight = 1;
                     const tName = p.name.toLowerCase();
                     
-                    if (p.gender !== pObj.gender) weight *= 4;
+                    if (p.gender !== pObj.gender) weight *= 3;
                     
                     const isT_A = SPECIAL_A.includes(tName);
                     const isT_B = SPECIAL_B.includes(tName);
                     const isP_A = SPECIAL_A.includes(pName);
                     const isP_B = SPECIAL_B.includes(pName);
 
-                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 4;
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 3;
 
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
