@@ -483,19 +483,19 @@
                                     <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="EX: ENZO..." className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-10 outline-none focus:border-primary focus:bg-black/90 transition-all font-black tracking-widest text-xl placeholder:text-gray-800" />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-6">
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Peso (kg) {speedEnabled ? '' : '(Opcional)'}</label>
                                         <input type="number" placeholder="80" value={weight} onChange={e => setWeight(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black tracking-widest placeholder:text-gray-800 transition-all text-white" />
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Sexo/Sexualidade</label>
+                                        <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Sexo / Sexualidade</label>
                                         <div className="flex gap-4">
-                                            <button onClick={() => setGender('M')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-widest flex items-center justify-center gap-2 ${gender === 'M' ? 'bg-primary border-primary shadow-[0_0_20px_rgba(255,0,110,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
-                                                <span>👨</span> Homem
+                                            <button onClick={() => setGender('M')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 text-sm md:text-base ${gender === 'M' ? 'bg-primary border-primary shadow-[0_0_30px_rgba(255,0,110,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
+                                                <span className="text-xl">👨</span> Homem
                                             </button>
-                                            <button onClick={() => setGender('F')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-widest flex items-center justify-center gap-2 ${gender === 'F' ? 'bg-secondary border-secondary shadow-[0_0_20px_rgba(131,56,236,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
-                                                <span>👩</span> Mulher
+                                            <button onClick={() => setGender('F')} className={`flex-1 h-20 rounded-[28px] border-2 transition-all font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 text-sm md:text-base ${gender === 'F' ? 'bg-secondary border-secondary shadow-[0_0_30px_rgba(131,56,236,0.4)] text-white' : 'bg-black/60 border-white/10 text-gray-500'}`}>
+                                                <span className="text-xl">👩</span> Mulher
                                             </button>
                                         </div>
                                     </div>
