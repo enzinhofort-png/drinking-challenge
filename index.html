@@ -221,8 +221,8 @@
             { text: "🔞 Encostar testa com alguém e ficar olhando nos olhos por 20 segundos. Ou 2 shots", type: "challenge", bonus: 2 },
             { text: "🔞 Dar um beijo no pescoço enquanto segura a cintura da pessoa. Ou 2 shots", type: "challenge", bonus: 2 },
             { text: "🔞 Escolher alguém para trocar 3 selinhos seguidos, sem rir. Ou 2 shots", type: "challenge", bonus: 2 },
-            { text: "🔞 Ficar em um lugar separado (banheiro/quarto) por 3 minutos com a próxima pessoa. Ou 2 shots", type: "challenge", bonus: 2 },
-            { text: "🔞 Escolher alguém para ir com você até outro cômodo e voltar só depois de 3 minutos. Ou 2 shots", type: "challenge", bonus: 2 },
+            { text: "🔞 Ficar em um lugar separado (banheiro/quarto) por 3 minutos com a próxima pessoa. Ou 2 shots", type: "challenge", bonus: 2, minRound: 12 },
+            { text: "🔞 Escolher alguém para ir com você até outro cômodo e voltar só depois de 3 minutos. Ou 2 shots", type: "challenge", bonus: 2, minRound: 12 },
             { text: "🔞 Sentar no colo de alguém e conversar bem perto por 2 minutos. Ou 2 shots", type: "challenge", bonus: 2 }
         ];
 
@@ -480,25 +480,23 @@
                                     <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && onAdd()} placeholder="EX: ENZO..." className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-10 outline-none focus:border-primary focus:bg-black/90 transition-all font-black tracking-widest text-xl placeholder:text-gray-800" />
                                 </div>
 
-                                {speedEnabled && (
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Peso (kg)</label>
-                                            <input type="number" placeholder="80" value={weight} onChange={e => setWeight(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black tracking-widest placeholder:text-gray-800 transition-all text-white" />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Peso (kg) {speedEnabled ? '' : '(Opcional)'}</label>
+                                        <input type="number" placeholder="80" value={weight} onChange={e => setWeight(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black tracking-widest placeholder:text-gray-800 transition-all text-white" />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Sexo/Sexualidade</label>
+                                        <div className="relative">
+                                            <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black text-gray-400 appearance-none cursor-pointer tracking-widest uppercase">
+                                                <option value="" disabled>---</option>
+                                                <option value="M">Homem</option>
+                                                <option value="F">Mulher</option>
+                                            </select>
+                                            <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-sm">▼</div>
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-primary uppercase ml-6 tracking-widest opacity-80">Sexo</label>
-                                            <div className="relative">
-                                                <select value={gender} onChange={e => setGender(e.target.value)} className="w-full h-20 bg-black/60 border-2 border-white/10 rounded-[28px] px-8 outline-none focus:border-primary text-xl font-black text-gray-400 appearance-none cursor-pointer tracking-widest uppercase">
-                                                    <option value="" disabled>---</option>
-                                                    <option value="M">MASC</option>
-                                                    <option value="F">FEM</option>
-                                                </select>
-                                                <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-sm">▼</div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
+                                    </div>
+                                </div>
 
                                 <button onClick={onAdd} className="w-full h-20 bg-primary hover:bg-pink-600 rounded-[30px] flex items-center justify-center gap-4 text-white font-black uppercase tracking-[0.3em] shadow-[0_15px_40px_rgba(255,0,110,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all text-xl mt-2">
                                     <Icons.Plus />
@@ -667,7 +665,17 @@
                 }
             }, [card, displayCard]);
 
-            const otherPlayers = players.filter((_, i) => i !== active).map(p => p.name);
+            const otherPlayersData = players.filter((_, i) => i !== active);
+            const weightedTargetNames = useMemo(() => {
+                let result = [];
+                const currentGender = players[active]?.gender;
+                otherPlayersData.forEach(p => {
+                    const weight = (p.gender !== currentGender) ? 4 : 1; // 4x frequency for different gender
+                    for (let n = 0; n < weight; n++) result.push(p.name);
+                });
+                return result;
+            }, [otherPlayersData, active]);
+
             const hasTarget = useMemo(() => displayCard && /alguém|pessoa|alvo/i.test(displayCard.text), [displayCard]);
 
             return (
@@ -723,7 +731,7 @@
                                     <p className="text-gray-500 text-xs uppercase font-bold tracking-widest">Sorteie o participante</p>
                                 </div>
                                 <div className="w-full max-w-sm">
-                                    <RouletteWheel items={otherPlayers} spin={isSpinningTarget} onEnd={r => { setTarget(r); setIsSpinningTarget(false); }} />
+                                    <RouletteWheel items={weightedTargetNames} spin={isSpinningTarget} onEnd={r => { setTarget(r); setIsSpinningTarget(false); }} />
                                 </div>
                                 {target && !isSpinningTarget && (
                                     <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-primary/20 border border-primary/40 px-8 py-4 rounded-2xl text-center">
@@ -758,7 +766,16 @@
                 } 
             }, [pResult, cResult]);
 
-            const otherPlayers = useMemo(() => players.filter(p => p.name !== pResult).map(p => p.name), [players, pResult]);
+            const weightedTargetNames = useMemo(() => {
+                let result = [];
+                const pObj = players.find(p => p.name === pResult);
+                if (!pObj) return players.map(p => p.name).filter(n => n !== pResult);
+                players.filter(p => p.name !== pResult).forEach(p => {
+                    const weight = (p.gender !== pObj.gender) ? 4 : 1;
+                    for (let n = 0; n < weight; n++) result.push(p.name);
+                });
+                return result;
+            }, [players, pResult]);
 
             return (
                 <div className="max-w-4xl mx-auto pt-8 md:pt-12 px-6 md:px-10 flex flex-col min-h-[90vh] pb-10">
@@ -790,7 +807,7 @@
                                         <div className="relative z-10 flex flex-col items-center gap-4 bg-black/40 p-6 rounded-3xl border border-white/10">
                                             <p className="text-xs font-black text-primary uppercase tracking-widest">Sorteie o Alvo</p>
                                             <div className="w-full h-24 relative overflow-hidden">
-                                                <RouletteWheel items={otherPlayers} spin={tSpinning} onEnd={r => { setTResult(r); setTSpinning(false); onFinish(pResult, cResult); }} />
+                                                <RouletteWheel items={weightedTargetNames} spin={tSpinning} onEnd={r => { setTResult(r); setTSpinning(false); onFinish(pResult, cResult); }} />
                                             </div>
                                             {tResult && !tSpinning && (
                                                 <p className="text-2xl font-black text-white uppercase italic">🎯 {tResult}</p>
@@ -876,8 +893,8 @@
             const [itCount, setItCount] = useState(0);
 
             const handleAdd = () => {
-                if (name.trim() && !players.some(p => p.name === name.trim())) {
-                    if (speedEnabled && (!weight || !gender)) return; // Validar se velocímetro ativo
+                if (name.trim() && gender && !players.some(p => p.name === name.trim())) {
+                    if (speedEnabled && !weight) return; 
                     setPlayers([...players, { name: name.trim(), shots: 0, weight, gender }]);
                     setName(''); setWeight(''); setGender('');
                 }
@@ -924,8 +941,10 @@
                 }
             };
 
-            const handleDraw = () => {
-                const c = activeDeck[Math.floor(Math.random() * activeDeck.length)];
+             const handleDraw = () => {
+                const availableCards = activeDeck.filter(c => !c.minRound || itCount >= c.minRound);
+                if (availableCards.length === 0) return;
+                const c = availableCards[Math.floor(Math.random() * availableCards.length)];
                 setCard(c); const newP = [...players];
                 if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
                 if (c.type === 'everyone') newP.forEach(p => p.shots++);
@@ -956,7 +975,7 @@
                         {view === 'custom-editor' && <CustomCreator key="ce" deck={customDeck} onSave={d => { setCustomDeck(d); setView('menu'); }} onBack={() => setView('menu')} />}
                         {view === 'deck-config' && <DeckConfigView key="dc" baseDeck={activeDeck} mode={selectedModeName} onAddCard={(card) => setActiveDeck([...activeDeck, card])} onBack={() => setView('menu')} onConfirm={confirmDeck} />}
                         {(view === 'cards' || view === '18' || view === 'custom') && <CardsView key="c" modeLabel={view === '18' ? 'MODO 18+' : (view === 'custom' ? 'MODO CUSTOM' : 'MODO CARTAS')} players={players} active={active} card={card} onDraw={handleDraw} onExit={() => setView('menu')} cardsCount={itCount} speedEnabled={speedEnabled} startTime={gameStartTime} />}
-                        {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} />}
+                        {view === 'roulette' && <RouletteView key="r" players={players} deck={activeDeck.filter(c => !c.minRound || itCount >= c.minRound)} onExit={() => setView('menu')} onFinish={(n, c) => updateShot(n, c.bonus)} onVote={() => setVoting(true)} speedEnabled={speedEnabled} startTime={gameStartTime} />}
                         {view === 'finish' && <StoryCard key="f" players={players} onRestart={() => { setPlayers(players.map(p => ({ ...p, shots: 0 }))); setItCount(0); setView('menu'); }} />}
                     </AnimatePresence>
                     {voting && <DemocracyVote players={players} onEnd={n => { updateShot(n, 1); setVoting(false); }} />}
