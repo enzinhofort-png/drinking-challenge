@@ -696,8 +696,7 @@
                     const isP_A = SPECIAL_A.includes(pName);
                     const isP_B = SPECIAL_B.includes(pName);
                     
-                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 4; // 4x probability together
-                    else if (isT_A || isT_B) weight *= 2; // 2x probability general
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 4; 
                     
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
@@ -824,7 +823,6 @@
                     const isP_B = SPECIAL_B.includes(pName);
 
                     if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 4;
-                    else if (isT_A || isT_B) weight *= 2;
 
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
