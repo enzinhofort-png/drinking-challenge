@@ -204,8 +204,7 @@
 
         const CARDS_18 = [
             { text: "🔞 Beije alguém ou 3 shots", type: "challenge", bonus: 3 },
-            { text: "🔥 Mostre o histórico ou 2 shots", type: "challenge", bonus: 2 },
-            { text: "😏 Massagem ou beba 2 shots", type: "challenge", bonus: 2 },
+            { text: "🔞 Libere seu celular por 30 segundos ou 2 shots", type: "challenge", bonus: 2 },
             { text: "🥃 Beba se já ficou com alguém aqui", type: "drink", bonus: 1 },
             { text: "🫣 Verdade picante ou 3 shots", type: "challenge", bonus: 3 },
             { text: "🧊 Gelo no corpo ou 2 shots", type: "challenge", bonus: 2 },
@@ -696,7 +695,7 @@
                     const isP_A = SPECIAL_A.includes(pName);
                     const isP_B = SPECIAL_B.includes(pName);
                     
-                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 3; 
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 2; 
                     
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
@@ -822,7 +821,7 @@
                     const isP_A = SPECIAL_A.includes(pName);
                     const isP_B = SPECIAL_B.includes(pName);
 
-                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 3;
+                    if ((isP_A && isT_B) || (isP_B && isT_A)) weight *= 2;
 
                     for (let n = 0; n < weight; n++) result.push(p.name);
                 });
